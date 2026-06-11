@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node scripts/make-icons.mjs)",
+      "PowerShell(Get-Content prod.log -Tail 5; Write-Output \"---\"; Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object -First 3 OwningProcess | ForEach-Object { Get-Process -Id $_.OwningProcess | Select-Object Id, ProcessName, StartTime })",
+      "PowerShell(\\(Invoke-WebRequest -Uri 'http://localhost:3000/api/tasks?view=today' -UseBasicParsing\\).Content.Substring\\(0,300\\))"
+    ]
+  }
+}
