@@ -3,10 +3,10 @@
 Ứng dụng ghi chú và quản lý công việc — Next.js (App Router) + Supabase (Postgres), cài được trên điện thoại dưới dạng PWA.
 
 ## Tính năng
-- Công việc theo ngày, công việc con (checklist), đánh dấu hoàn thành
-- **Thời khóa biểu** cố định theo tuần — tự sinh task vào "Hôm nay" đúng thứ
-- Việc tự tạo chưa xong **tự dời sang ngày kế tiếp** đến khi tick
-- Ghi chú dạng thẻ, Thùng rác khôi phục được
+- **Lời nhắc** kiểu iPhone: danh sách phẳng, đặt **Ngày / Giờ / Lặp lại / Mức ưu tiên** trong bảng chi tiết; bật ưu tiên hiện `!!!`
+- Lời nhắc **tới ngày tự "nhảy"** sang mục **Note** (loại 1 lần biến mất khỏi danh sách; loại lặp tự dời sang lần kế)
+- **Note** chia 2 phần: *Từ lời nhắc* (tới hạn) và *Ghi chú* tự viết
+- Tên/ghi chú **xuống dòng hiện đầy đủ**, Thùng rác khôi phục được
 - PWA + dark mode, giao diện responsive
 
 ## Chạy local

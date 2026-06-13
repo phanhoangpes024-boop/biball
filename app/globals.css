@@ -287,7 +287,7 @@ input {
 /* ================= Task rows ================= */
 .task-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
   padding: 13px 4px;
 }
@@ -323,6 +323,14 @@ input {
   outline: none;
   background: transparent;
   color: var(--text);
+  /* textarea: xuống dòng hiện đầy đủ, không cắt cụt */
+  font-family: inherit;
+  line-height: 1.45;
+  resize: none;
+  overflow: hidden;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .task-row.sub .task-title {
   font-size: 15px;
@@ -633,6 +641,243 @@ input {
   align-items: center;
   color: var(--text-faint);
   flex-shrink: 0;
+}
+
+/* ================= Lời nhắc (kiểu iPhone) ================= */
+.rem-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 4px;
+}
+.rem-row + .rem-row {
+  border-top: 1px solid var(--border);
+}
+.rem-check {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border: 1.8px solid var(--text-faint);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-fg);
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.rem-check:hover {
+  border-color: var(--text-muted);
+}
+.rem-check.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.rem-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rem-titlewrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.rem-bang {
+  color: #3b82f6;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.45;
+  flex-shrink: 0;
+}
+.rem-title {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  padding: 0;
+  overflow: hidden;
+  /* xuống dòng hiện đầy đủ, không cắt cụt */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.rem-title.done {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+.rem-meta {
+  font-size: 13px;
+  color: var(--danger);
+}
+.rem-meta.future {
+  color: var(--text-muted);
+}
+.rem-info,
+.rem-del {
+  flex-shrink: 0;
+  margin-top: 1px;
+  padding: 5px;
+  border-radius: 8px;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+}
+.rem-info:hover {
+  background: var(--hover);
+  color: #3b82f6;
+}
+.rem-del:hover {
+  background: var(--hover);
+  color: var(--danger);
+}
+
+/* ----- Bảng chi tiết (sheet) ----- */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.45);
+}
+.sheet {
+  position: fixed;
+  z-index: 41;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(440px, calc(100vw - 24px));
+  max-height: min(86dvh, 760px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+.sheet-x {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--hover);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sheet-done {
+  font-weight: 600;
+  color: #3b82f6;
+  padding: 6px 8px;
+}
+.sheet-body {
+  padding: 14px;
+  overflow-y: auto;
+}
+.sheet-group {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 14px 4px 8px;
+}
+.sheet-group:first-child {
+  padding-top: 0;
+}
+.sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--hover);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+.sheet-label {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sheet-bang {
+  font-size: 15px;
+}
+.sheet-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sheet-input,
+.sheet-select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  color-scheme: light dark;
+  font-family: inherit;
+}
+.sheet-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg));
+  color: var(--danger);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ----- Nút gạt (toggle) kiểu iOS ----- */
+.switch {
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--active);
+  padding: 2px;
+  flex-shrink: 0;
+  transition: background 0.18s ease;
+}
+.switch .knob {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.18s ease;
+}
+.switch.on {
+  background: #34c759;
+}
+.switch.on .knob {
+  transform: translateX(18px);
 }
 
 /* ================= Notes ================= */

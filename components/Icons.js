@@ -140,3 +140,20 @@ export const IconX = () => (
     <path d="M6 6l12 12M18 6L6 18" />
   </S>
 );
+export const IconCircle = ({ size = 22 }) => (
+  <S size={size}>
+    <circle cx="12" cy="12" r="9" />
+  </S>
+);
+export const IconInfo = () => (
+  <S size={19}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5M12 7.6v.4" />
+  </S>
+);
+export const IconBell = () => (
+  <S>
+    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+  </S>
+);

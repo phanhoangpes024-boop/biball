@@ -1,42 +1,55 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { REPEATS } from "@/lib/reminders";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+// GET /api/reminders?view=trash
+export async function GET(req) {
   const sb = supabaseAdmin();
-  const { data, error } = await sb
-    .from("routines")
-    .select("*")
-    .order("weekday", { ascending: true })
+  const { searchParams } = new URL(req.url);
+  const trash = searchParams.get("view") === "trash";
+
+  let q = sb.from("reminders").select("*");
+  q = trash ? q.not("deleted_at", "is", null) : q.is("deleted_at", null);
+
+  const { data, error } = await q
+    .order("completed", { ascending: true })
+    .order("due_date", { ascending: true, nullsFirst: false })
     .order("due_time", { ascending: true, nullsFirst: false })
     .order("position", { ascending: true })
     .order("id", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
   return NextResponse.json(data);
 }
 
-// POST /api/routines  { title, weekday, dueTime? }
+// POST /api/reminders  { title, dueDate?, dueTime?, repeat?, priority? }
 export async function POST(req) {
   const sb = supabaseAdmin();
   const body = await req.json();
   const title = (body.title || "").trim();
-  const weekday = Number(body.weekday);
-  if (!title || !Number.isInteger(weekday) || weekday < 0 || weekday > 6) {
-    return NextResponse.json({ error: "title and weekday (0-6) required" }, { status: 400 });
-  }
+  if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
 
   const { data: posRows } = await sb
-    .from("routines")
+    .from("reminders")
     .select("position")
-    .eq("weekday", weekday)
     .order("position", { ascending: false })
     .limit(1);
   const position = (posRows?.[0]?.position ?? -1) + 1;
 
+  const repeat = REPEATS.includes(body.repeat) ? body.repeat : "none";
+
   const { data, error } = await sb
-    .from("routines")
-    .insert({ title, weekday, due_time: body.dueTime ?? null, position })
+    .from("reminders")
+    .insert({
+      title,
+      due_date: body.dueDate ?? null,
+      due_time: body.dueTime ?? null,
+      repeat,
+      priority: !!body.priority,
+      position,
+    })
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

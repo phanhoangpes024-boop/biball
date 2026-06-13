@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, localToday, addDays, dueMeta } from "@/lib/client";
-import { IconCalendar, IconCheck, IconPlus, IconTrash, IconRepeat, IconRestore } from "@/components/Icons";
+import { IconCalendar, IconCheck, IconPlus, IconTrash, IconBell } from "@/components/Icons";
 
 /* Apply fn to the task with the given id, wherever it sits in the tree. */
 function mapTask(tasks, id, fn) {
@@ -110,13 +110,12 @@ export default function TasksView() {
     }
   };
 
-  /* Group the day's tasks: overdue (rolled over) → today → done. */
+  /* Note = 2 phần: "Từ lời nhắc" (nhảy qua) ở trên, "Việc của tôi" ở dưới, rồi "Đã hoàn thành". */
   const groups = useMemo(() => {
     if (!tasks) return [];
-    const today = localToday();
     return [
-      { key: "overdue", title: "Quá hạn", tone: "overdue", items: tasks.filter((t) => !t.completed && t.due_date && t.due_date < today) },
-      { key: "today", title: "Hôm nay", items: tasks.filter((t) => !t.completed && (!t.due_date || t.due_date >= today)) },
+      { key: "reminder", title: "Từ lời nhắc", items: tasks.filter((t) => t.from_reminder && !t.completed) },
+      { key: "mine", title: "Việc của tôi", items: tasks.filter((t) => !t.from_reminder && !t.completed) },
       { key: "done", title: "Đã hoàn thành", items: tasks.filter((t) => t.completed) },
     ].filter((g) => g.items.length > 0);
   }, [tasks]);
@@ -191,7 +190,15 @@ function TaskGroup({ task, onToggle, onRename, onDelete, onSetDue, onDueClose, o
 
 function TaskRow({ task, sub, onToggle, onRename, onDelete, onSetDue, onDueClose }) {
   const [title, setTitle] = useState(task.title);
+  const ref = useRef(null);
   useEffect(() => { setTitle(task.title); }, [task.title]);
+
+  const grow = (el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
+  useEffect(() => { grow(ref.current); }, [title]);
 
   return (
     <div className={`task-row ${sub ? "sub" : ""}`}>
@@ -203,23 +210,24 @@ function TaskRow({ task, sub, onToggle, onRename, onDelete, onSetDue, onDueClose
         {task.completed && <IconCheck />}
       </button>
 
-      <input
+      <textarea
+        ref={ref}
+        rows={1}
         className={`task-title ${task.completed ? "done" : ""}`}
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => { setTitle(e.target.value); grow(e.target); }}
         onBlur={() => {
           const v = title.trim();
           if (v && v !== task.title) onRename(task, v);
           else setTitle(task.title);
         }}
-        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+        }}
       />
 
-      {!!task.routine_id && (
-        <span className="tag" title="Từ thời khóa biểu"><IconRepeat /></span>
-      )}
-      {!!task.rolled_over && !task.completed && (
-        <span className="tag" title="Dời từ ngày trước (chưa xong)"><IconRestore /></span>
+      {task.from_reminder && (
+        <span className="tag" title="Từ lời nhắc"><IconBell /></span>
       )}
 
       <DueBadge task={task} onSetDue={(p) => onSetDue(task, p)} onClose={onDueClose} />

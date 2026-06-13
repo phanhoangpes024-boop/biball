@@ -1,4 +1,5 @@
 import { supabaseAdmin, localToday } from "@/lib/supabase";
+import { syncReminders } from "@/lib/reminders";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -8,27 +9,20 @@ export async function GET(req) {
   const sb = supabaseAdmin();
   const { searchParams } = new URL(req.url);
   const view = searchParams.get("view") || "today";
-  const today = localToday();
 
-  if (view !== "trash") {
-    const { error } = await sb.rpc("sync_today", {
-      p_today: today,
-      p_weekday: new Date().getDay(),
-    });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  // Lời nhắc tới hạn tự "nhảy" thành mục checklist trước khi đọc danh sách.
+  if (view !== "trash") await syncReminders(sb, localToday());
 
   let q = sb.from("tasks").select("*").is("parent_id", null);
   if (view === "trash") {
     q = q.not("deleted_at", "is", null);
   } else {
-    // "today": gồm cả task quá hạn (due_date <= hôm nay) — client tự nhóm "Quá hạn"
-    q = q.is("deleted_at", null).not("due_date", "is", null).lte("due_date", today);
+    // Note = checklist bền: hiện mọi việc cha chưa xoá (không lọc theo ngày).
+    q = q.is("deleted_at", null);
   }
 
   const { data: parents, error } = await q
-    .order("due_date", { ascending: true })
-    .order("due_time", { ascending: true, nullsFirst: false })
+    .order("completed", { ascending: true })
     .order("position", { ascending: true })
     .order("id", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -61,9 +55,8 @@ export async function POST(req) {
   }
 
   const parentId = body.parentId ?? null;
-  // Default new top-level tasks to today so they show up in "Hôm nay".
-  const dueDate =
-    body.dueDate !== undefined ? body.dueDate : parentId ? null : localToday();
+  // Việc trong Note là checklist — không tự gắn ngày, để người dùng tự đặt nếu cần.
+  const dueDate = body.dueDate !== undefined ? body.dueDate : null;
   const dueTime = body.dueTime ?? null;
 
   // Next position within the same level.

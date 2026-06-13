@@ -2,23 +2,21 @@
 
 import { useState } from "react";
 import {
-  IconLogo, IconSun, IconNote, IconTrash,
-  IconChevron, IconMenu, IconTimetable,
+  IconLogo, IconNote, IconTrash,
+  IconChevron, IconMenu, IconBell,
 } from "@/components/Icons";
 import TasksView from "@/components/TasksView";
-import NotesView from "@/components/NotesView";
 import TrashView from "@/components/TrashView";
-import ScheduleView from "@/components/ScheduleView";
+import RemindersView from "@/components/RemindersView";
 
 const NAV = [
-  { key: "today", label: "Hôm nay", Icon: IconSun },
-  { key: "schedule", label: "Thời khóa biểu", Icon: IconTimetable },
-  { key: "notes", label: "Ghi chú", Icon: IconNote },
+  { key: "notes", label: "Note", Icon: IconNote },
+  { key: "reminders", label: "Lời nhắc", Icon: IconBell },
   { key: "trash", label: "Thùng rác", Icon: IconTrash },
 ];
 
 export default function Page() {
-  const [view, setView] = useState({ type: "today", label: "Hôm nay" });
+  const [view, setView] = useState({ type: "notes", label: "Note" });
   const [drawer, setDrawer] = useState(false);
 
   const selectView = (v) => {
@@ -43,12 +41,10 @@ export default function Page() {
           </h1>
         </header>
 
-        {view.type === "notes" ? (
-          <NotesView />
+        {view.type === "reminders" ? (
+          <RemindersView />
         ) : view.type === "trash" ? (
           <TrashView />
-        ) : view.type === "schedule" ? (
-          <ScheduleView />
         ) : (
           <TasksView />
         )}
@@ -76,7 +72,7 @@ function Sidebar({ view, open, onSelect }) {
         ))}
       </nav>
 
-      <div className="sidebar-footer">Dữ liệu lưu cục bộ bằng SQLite</div>
+      <div className="sidebar-footer">Note &amp; Lời nhắc</div>
     </aside>
   );
 }
