@@ -40,11 +40,22 @@ alter table tasks add column if not exists completed_at  timestamptz;
 create index if not exists idx_tasks_parent on tasks(parent_id);
 create index if not exists idx_tasks_due    on tasks(due_date);
 
+-- ---------- Nhật ký tâm trạng (mỗi ngày 1 bản ghi) ----------
+create table if not exists mood_entries (
+  id          bigint generated always as identity primary key,
+  entry_date  date not null,
+  data        jsonb not null default '{}'::jsonb,     -- toàn bộ câu trả lời
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create unique index if not exists idx_mood_entry_date on mood_entries(entry_date);
+
 -- ---------- Bảo mật ----------
 -- Bật RLS để chặn truy cập ẩn danh. App chạy bằng service_role key phía server,
 -- key này luôn bỏ qua RLS nên không cần thêm policy.
-alter table reminders enable row level security;
-alter table tasks     enable row level security;
+alter table reminders    enable row level security;
+alter table tasks        enable row level security;
+alter table mood_entries enable row level security;
 
 -- ---------- Dữ liệu mẫu (tuỳ chọn — xoá nếu không cần) ----------
 insert into reminders (title, due_date, due_time, repeat, priority, position) values

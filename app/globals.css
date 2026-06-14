@@ -11,6 +11,7 @@
   --accent: #1c1c1e;
   --accent-fg: #ffffff;
   --danger: #ef4444;
+  --mood: #7c6cf0;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   --radius: 14px;
 }
@@ -1016,6 +1017,249 @@ input {
 .hist-time {
   font-size: 13px;
   color: var(--text-muted);
+}
+
+/* ================= Nhật ký tâm trạng ================= */
+.mood-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 1100px;
+}
+.mood-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 640px;
+  padding: 2px 4px;
+}
+.mood-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mood-status {
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 52px;
+  text-align: right;
+}
+.mood-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+}
+.mood-date svg { width: 16px; height: 16px; }
+.mood-date input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  color-scheme: light dark;
+}
+.mood-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--mood);
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mood-new svg { width: 16px; height: 16px; }
+.mood-new:hover { filter: brightness(1.06); }
+
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  align-items: start;
+  max-width: 1100px;
+  margin-top: 14px;
+}
+.mood-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mood-card.full { grid-column: 1 / -1; }
+.mood-card.special {
+  background: color-mix(in srgb, #f5c518 14%, var(--bg-card));
+  border-color: color-mix(in srgb, #f5c518 30%, var(--border));
+}
+.mood-ch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+}
+.mood-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--mood);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mood-badge.moon { background: transparent; font-size: 18px; }
+.mood-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* chip cảm xúc */
+.mood-moods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mood-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 70px;
+  padding: 8px 4px;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background: var(--hover);
+}
+.mood-chip .emo { font-size: 24px; line-height: 1; }
+.mood-chip .cap { font-size: 11px; color: var(--text-muted); text-align: center; }
+.mood-chip .dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-faint);
+}
+.mood-chip.on {
+  border-color: var(--mood);
+  background: color-mix(in srgb, var(--mood) 14%, var(--bg-card));
+}
+.mood-chip.on .cap { color: var(--text); }
+.mood-chip.on .dot { border-color: var(--mood); background: var(--mood); }
+
+/* thang 1-10 */
+.mood-subgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 480px) { .mood-subgrid { grid-template-columns: 1fr; } }
+.mood-subbox {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mood-scale { display: flex; flex-wrap: wrap; gap: 4px; }
+.scale-dot {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.scale-dot.on {
+  background: var(--mood);
+  border-color: var(--mood);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* sao chấm điểm */
+.mood-stars { display: flex; align-items: center; gap: 4px; }
+.mood-stars .star { font-size: 26px; line-height: 1; color: var(--text-faint); }
+.mood-stars .star.on { color: #f5b301; }
+.mood-stars .star-val { margin-left: 8px; font-size: 14px; color: var(--text-muted); }
+
+/* checkbox nhóm */
+.mood-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.mood-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 14px;
+  color: var(--text);
+}
+.mood-check .box {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1.5px solid var(--text-faint);
+  flex-shrink: 0;
+}
+.mood-check.on {
+  border-color: var(--mood);
+  background: color-mix(in srgb, var(--mood) 12%, var(--bg-card));
+}
+.mood-check.on .box {
+  background: var(--mood);
+  border-color: var(--mood);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12l5 5L20 6'/%3E%3C/svg%3E");
+  background-size: 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ô nhập */
+.mood-input,
+.mood-area {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  width: 100%;
+}
+.mood-area { resize: none; overflow: hidden; line-height: 1.5; }
+.mood-input:focus,
+.mood-area:focus { border-color: var(--mood); }
+.mood-input::placeholder,
+.mood-area::placeholder { color: var(--text-faint); }
+.mood-numrow { display: flex; align-items: center; gap: 10px; }
+.mood-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--hover);
+  color: var(--text-muted);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /* ================= Misc ================= */

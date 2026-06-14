@@ -3,17 +3,19 @@
 import { useState } from "react";
 import {
   IconNote, IconTrash,
-  IconChevron, IconMenu, IconBell, IconHistory,
+  IconChevron, IconMenu, IconBell, IconHistory, IconHeart,
 } from "@/components/Icons";
 import TasksView from "@/components/TasksView";
 import TrashView from "@/components/TrashView";
 import RemindersView from "@/components/RemindersView";
 import HistoryView from "@/components/HistoryView";
+import MoodView from "@/components/MoodView";
 
 const NAV = [
   { key: "notes", label: "Note", Icon: IconNote },
   { key: "reminders", label: "Lời nhắc", Icon: IconBell },
   { key: "history", label: "Lịch sử làm việc", Icon: IconHistory },
+  { key: "mood", label: "Nhật ký tâm trạng", Icon: IconHeart },
   { key: "trash", label: "Thùng rác", Icon: IconTrash },
 ];
 
@@ -47,6 +49,8 @@ export default function Page() {
           <RemindersView />
         ) : view.type === "history" ? (
           <HistoryView />
+        ) : view.type === "mood" ? (
+          <MoodView />
         ) : view.type === "trash" ? (
           <TrashView />
         ) : (
