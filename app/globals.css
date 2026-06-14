@@ -1348,6 +1348,27 @@ input {
   .cal-title { font-size: 17px; }
 }
 
+/* chi tiết 1 ngày dưới lịch */
+.cal-detail { margin-top: 18px; }
+.cal-detail-x {
+  margin-left: auto;
+  color: var(--text-muted);
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 6px;
+}
+.cal-detail-x:hover { background: var(--hover); color: var(--text); }
+
+/* chấm nhỏ thay cho checkbox ở Lời nhắc (lời nhắc không phải checklist) */
+.rem-dot {
+  width: 7px;
+  height: 7px;
+  margin: 9px 8px 0 4px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex-shrink: 0;
+}
+
 /* ================= Nhật ký tâm trạng ================= */
 .mood-head {
   display: flex;

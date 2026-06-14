@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import { api, reminderMeta, REPEAT_LABELS } from "@/lib/client";
 import { optimistic } from "@/lib/swr";
-import { IconPlus, IconTrash, IconCheck, IconCircle, IconInfo, IconX } from "@/components/Icons";
+import { IconPlus, IconTrash, IconInfo, IconX } from "@/components/Icons";
 
 const KEY = "/api/reminders";
 
@@ -70,7 +70,6 @@ export default function RemindersView() {
               <ReminderRow
                 key={r.id}
                 r={r}
-                onToggle={() => patch(r.id, { completed: !r.completed })}
                 onRename={(title) => patch(r.id, { title })}
                 onOpen={() => setDetail(r)}
                 onDelete={() => remove(r.id)}
@@ -95,7 +94,8 @@ export default function RemindersView() {
 }
 
 /* ================= Một dòng lời nhắc ================= */
-function ReminderRow({ r, onToggle, onRename, onOpen, onDelete }) {
+/* Lời nhắc KHÔNG phải checklist — nó chỉ chờ tới hạn để tự đẩy sang Note. */
+function ReminderRow({ r, onRename, onOpen, onDelete }) {
   const [title, setTitle] = useState(r.title);
   const ref = useRef(null);
   useEffect(() => { setTitle(r.title); }, [r.title]);
@@ -111,13 +111,7 @@ function ReminderRow({ r, onToggle, onRename, onOpen, onDelete }) {
 
   return (
     <div className="rem-row">
-      <button
-        className={`rem-check ${r.completed ? "checked" : ""}`}
-        onClick={onToggle}
-        aria-label={r.completed ? "Bỏ hoàn thành" : "Hoàn thành"}
-      >
-        {r.completed && <IconCheck />}
-      </button>
+      <span className="rem-dot" aria-hidden />
 
       <div className="rem-main">
         <div className="rem-titlewrap">
@@ -125,7 +119,7 @@ function ReminderRow({ r, onToggle, onRename, onOpen, onDelete }) {
           <textarea
             ref={ref}
             rows={1}
-            className={`rem-title ${r.completed ? "done" : ""}`}
+            className="rem-title"
             value={title}
             onChange={(e) => { setTitle(e.target.value); grow(e.target); }}
             onBlur={() => {

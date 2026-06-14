@@ -4,14 +4,13 @@ import { useMemo, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { api } from "@/lib/client";
 import { optimistic } from "@/lib/swr";
-import { IconCheck, IconTrash, IconChevron } from "@/components/Icons";
+import { IconCheck, IconTrash, IconChevron, IconX } from "@/components/Icons";
 
 const KEY = "/api/tasks?view=history";
 const WD = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
 const MODES = [
   { key: "month", label: "Tháng" },
   { key: "week", label: "Tuần" },
-  { key: "day", label: "Ngày" },
 ];
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -28,6 +27,7 @@ export default function HistoryView() {
   const { mutate: gmutate } = useSWRConfig();
   const [mode, setMode] = useState("month");
   const [cursor, setCursor] = useState(() => new Date());
+  const [detailDay, setDetailDay] = useState(null); // ngày đang xem chi tiết
 
   // Gom các đơn vị việc đã hoàn thành theo ngày (giờ máy = giờ VN của bạn).
   const byDay = useMemo(() => {
@@ -52,17 +52,17 @@ export default function HistoryView() {
       () => gmutate("/api/tasks?view=trash"));
 
   const today = new Date();
-  const go = (dir) =>
-    setCursor((c) => (mode === "month" ? addMonths(c, dir) : mode === "week" ? addDays(c, 7 * dir) : addDays(c, dir)));
+  const go = (dir) => {
+    setDetailDay(null);
+    setCursor((c) => (mode === "month" ? addMonths(c, dir) : addDays(c, 7 * dir)));
+  };
 
   const title =
     mode === "month"
       ? `Tháng ${cursor.getMonth() + 1}, ${cursor.getFullYear()}`
-      : mode === "week"
-        ? `Tuần ${pad(startOfWeek(cursor).getDate())}/${pad(startOfWeek(cursor).getMonth() + 1)} – ${pad(addDays(startOfWeek(cursor), 6).getDate())}/${pad(addDays(startOfWeek(cursor), 6).getMonth() + 1)}`
-        : cursor.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+      : `Tuần ${pad(startOfWeek(cursor).getDate())}/${pad(startOfWeek(cursor).getMonth() + 1)} – ${pad(addDays(startOfWeek(cursor), 6).getDate())}/${pad(addDays(startOfWeek(cursor), 6).getMonth() + 1)}`;
 
-  const openDay = (d) => { setCursor(d); setMode("day"); };
+  const openDay = (d) => setDetailDay(d);
 
   return (
     <div className="content">
@@ -75,10 +75,13 @@ export default function HistoryView() {
           <h2 className="cal-title">{title}</h2>
         </div>
         <div className="cal-actions">
-          <button className="cal-today" onClick={() => setCursor(new Date())}>Hôm nay</button>
           <div className="seg">
             {MODES.map((m) => (
-              <button key={m.key} className={`seg-btn ${mode === m.key ? "active" : ""}`} onClick={() => setMode(m.key)}>
+              <button
+                key={m.key}
+                className={`seg-btn ${mode === m.key ? "active" : ""}`}
+                onClick={() => { setMode(m.key); setDetailDay(null); }}
+              >
                 {m.label}
               </button>
             ))}
@@ -88,10 +91,19 @@ export default function HistoryView() {
 
       {!items && isLoading ? (
         <div className="skeleton"><div className="line" /><div className="line" /></div>
-      ) : mode === "day" ? (
-        <DayDetail date={cursor} items={byDay.get(keyOf(cursor)) ?? []} onUncheck={uncheck} onRemove={remove} />
       ) : (
-        <Grid mode={mode} cursor={cursor} today={today} countOf={countOf} onOpen={openDay} />
+        <>
+          <Grid mode={mode} cursor={cursor} today={today} countOf={countOf} onOpen={openDay} />
+          {detailDay && (
+            <DayDetail
+              date={detailDay}
+              items={byDay.get(keyOf(detailDay)) ?? []}
+              onUncheck={uncheck}
+              onRemove={remove}
+              onClose={() => setDetailDay(null)}
+            />
+          )}
+        </>
       )}
     </div>
   );
@@ -141,7 +153,7 @@ function Grid({ mode, cursor, today, countOf, onOpen }) {
 }
 
 /* ===== Chi tiết 1 ngày (nhóm việc mẹ + việc con) ===== */
-function DayDetail({ date, items, onUncheck, onRemove }) {
+function DayDetail({ date, items, onUncheck, onRemove, onClose }) {
   const blocks = useMemo(() => {
     const sorted = [...items].sort((a, b) => (a.completed_at > b.completed_at ? 1 : -1));
     const groups = new Map(); // parent_id -> {title, items}
@@ -161,8 +173,11 @@ function DayDetail({ date, items, onUncheck, onRemove }) {
   const heading = date.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
-    <section className="group">
-      <h2 className="group-h">{heading} <span className="group-count">{items.length}</span></h2>
+    <section className="group cal-detail">
+      <h2 className="group-h">
+        {heading} <span className="group-count">{items.length}</span>
+        <button className="cal-detail-x" onClick={onClose} aria-label="Đóng"><IconX /></button>
+      </h2>
       {items.length === 0 ? (
         <div className="empty">Ngày này chưa hoàn thành việc nào.</div>
       ) : (
