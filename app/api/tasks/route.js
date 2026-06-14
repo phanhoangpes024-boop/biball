@@ -1,4 +1,4 @@
-import { supabaseAdmin, localToday } from "@/lib/supabase";
+import { supabaseAdmin, localToday, vnTime } from "@/lib/supabase";
 import { syncReminders } from "@/lib/reminders";
 import { NextResponse } from "next/server";
 
@@ -10,8 +10,8 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const view = searchParams.get("view") || "today";
 
-  // Lời nhắc tới hạn tự "nhảy" thành mục checklist trước khi đọc danh sách.
-  if (view === "today" || view === "history") await syncReminders(sb, localToday());
+  // Lời nhắc tới hạn (đúng ngày + giờ VN) tự "nhảy" thành mục checklist.
+  if (view === "today" || view === "history") await syncReminders(sb, localToday(), vnTime());
 
   // Lịch sử làm việc: mọi việc đã tick xong, mới nhất trước, kèm thời điểm tick.
   if (view === "history") {
