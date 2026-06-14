@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import {
-  IconLogo, IconNote, IconTrash,
-  IconChevron, IconMenu, IconBell,
+  IconNote, IconTrash,
+  IconChevron, IconMenu, IconBell, IconHistory,
 } from "@/components/Icons";
 import TasksView from "@/components/TasksView";
 import TrashView from "@/components/TrashView";
 import RemindersView from "@/components/RemindersView";
+import HistoryView from "@/components/HistoryView";
 
 const NAV = [
   { key: "notes", label: "Note", Icon: IconNote },
   { key: "reminders", label: "Lời nhắc", Icon: IconBell },
+  { key: "history", label: "Lịch sử làm việc", Icon: IconHistory },
   { key: "trash", label: "Thùng rác", Icon: IconTrash },
 ];
 
@@ -43,6 +45,8 @@ export default function Page() {
 
         {view.type === "reminders" ? (
           <RemindersView />
+        ) : view.type === "history" ? (
+          <HistoryView />
         ) : view.type === "trash" ? (
           <TrashView />
         ) : (
@@ -57,7 +61,10 @@ export default function Page() {
 function Sidebar({ view, open, onSelect }) {
   return (
     <aside className={`sidebar ${open ? "open" : ""}`}>
-      <div className="brand"><IconLogo /> Ghi chú &amp; Công việc</div>
+      <div className="brand">
+        <img className="brand-logo" src="/logo.png" alt="Logo" width={26} height={26} />
+        Note &amp; Lời nhắc
+      </div>
 
       <nav className="nav">
         {NAV.map(({ key, label, Icon }) => (

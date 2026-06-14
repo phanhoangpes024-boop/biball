@@ -2,12 +2,12 @@ import "./globals.css";
 import RegisterSW from "@/components/RegisterSW";
 
 export const metadata = {
-  title: "Ghi chú & Công việc",
-  description: "Ứng dụng ghi chú và quản lý công việc",
+  title: "Note & Lời nhắc",
+  description: "Note, lời nhắc và lịch sử làm việc",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Công việc",
+    title: "Note",
   },
 };
 

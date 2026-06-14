@@ -99,6 +99,13 @@ input {
   font-size: 17px;
   padding: 6px 8px 18px;
 }
+.brand-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
 .nav,
 .lists {
@@ -970,6 +977,45 @@ input {
 }
 .note-composer textarea::placeholder {
   color: var(--text-faint);
+}
+
+/* ================= Lịch sử làm việc ================= */
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--hover);
+  border-radius: 10px;
+  padding: 3px;
+  margin: 2px 4px 16px;
+}
+.seg-btn {
+  padding: 6px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.seg-btn.active {
+  background: var(--bg-card);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+.hist-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hist-title {
+  font-size: 16px;
+  color: var(--text);
+  word-break: break-word;
+}
+.hist-time {
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 /* ================= Misc ================= */

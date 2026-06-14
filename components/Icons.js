@@ -157,3 +157,10 @@ export const IconBell = () => (
     <path d="M13.7 21a2 2 0 0 1-3.4 0" />
   </S>
 );
+export const IconHistory = () => (
+  <S>
+    <path d="M3 12a9 9 0 1 0 2.5-6.2" />
+    <path d="M3 4v4h4" />
+    <path d="M12 8v4l3 2" />
+  </S>
+);

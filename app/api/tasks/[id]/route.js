@@ -11,7 +11,11 @@ export async function PATCH(req, { params }) {
 
   const patch = {};
   if (body.title !== undefined) patch.title = String(body.title).trim();
-  if (body.completed !== undefined) patch.completed = !!body.completed;
+  if (body.completed !== undefined) {
+    patch.completed = !!body.completed;
+    // Ghi thời điểm tick xong để đưa vào Lịch sử làm việc (bỏ tick -> xoá mốc).
+    patch.completed_at = body.completed ? new Date().toISOString() : null;
+  }
   if (body.dueDate !== undefined) patch.due_date = body.dueDate;
   if (body.dueTime !== undefined) patch.due_time = body.dueTime;
   if (body.restore) patch.deleted_at = null;
@@ -20,9 +24,12 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ error: "no fields" }, { status: 400 });
   }
 
-  // Toggle subtasks along with the parent.
+  // Toggle subtasks along with the parent (kèm mốc thời gian).
   if (body.completed !== undefined) {
-    await sb.from("tasks").update({ completed: !!body.completed }).eq("parent_id", id);
+    await sb
+      .from("tasks")
+      .update({ completed: !!body.completed, completed_at: patch.completed_at })
+      .eq("parent_id", id);
   }
   // Bring subtasks back with their parent.
   if (body.restore) {

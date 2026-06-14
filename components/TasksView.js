@@ -51,13 +51,17 @@ export default function TasksView() {
 
   const toggleTask = (task) => {
     const completed = !task.completed;
+    const isParent = !task.parent_id;
     mutate(
       (prev) =>
-        mapTask(prev, task.id, (t) => ({
-          ...t,
-          completed,
-          children: t.children?.map((c) => ({ ...c, completed })) ?? t.children,
-        })),
+        // Việc cha tick xong -> rời khỏi Note (nhảy sang Lịch sử làm việc).
+        completed && isParent
+          ? removeTask(prev, task.id)
+          : mapTask(prev, task.id, (t) => ({
+              ...t,
+              completed,
+              children: t.children?.map((c) => ({ ...c, completed })) ?? t.children,
+            })),
       () => api(`/api/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify({ completed }) })
     );
   };
@@ -110,13 +114,13 @@ export default function TasksView() {
     }
   };
 
-  /* Note = 2 phần: "Từ lời nhắc" (nhảy qua) ở trên, "Việc của tôi" ở dưới, rồi "Đã hoàn thành". */
+  /* Note = 2 phần: "Từ lời nhắc" (nhảy qua) ở trên, "Việc của tôi" ở dưới.
+     Việc tick xong rời khỏi đây, sang mục Lịch sử làm việc. */
   const groups = useMemo(() => {
     if (!tasks) return [];
     return [
       { key: "reminder", title: "Từ lời nhắc", items: tasks.filter((t) => t.from_reminder && !t.completed) },
       { key: "mine", title: "Việc của tôi", items: tasks.filter((t) => !t.from_reminder && !t.completed) },
-      { key: "done", title: "Đã hoàn thành", items: tasks.filter((t) => t.completed) },
     ].filter((g) => g.items.length > 0);
   }, [tasks]);
 

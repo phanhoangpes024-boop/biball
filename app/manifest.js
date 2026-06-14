@@ -1,8 +1,8 @@
 export default function manifest() {
   return {
-    name: "Ghi chú & Công việc",
-    short_name: "Công việc",
-    description: "Ứng dụng ghi chú và quản lý công việc",
+    name: "Note & Lời nhắc",
+    short_name: "Note",
+    description: "Note, lời nhắc và lịch sử làm việc",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
@@ -11,7 +11,7 @@ export default function manifest() {
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icon-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

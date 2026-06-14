@@ -4,25 +4,38 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/tasks?view=today|trash
+// GET /api/tasks?view=today|history|trash
 export async function GET(req) {
   const sb = supabaseAdmin();
   const { searchParams } = new URL(req.url);
   const view = searchParams.get("view") || "today";
 
   // Lời nhắc tới hạn tự "nhảy" thành mục checklist trước khi đọc danh sách.
-  if (view !== "trash") await syncReminders(sb, localToday());
+  if (view === "today" || view === "history") await syncReminders(sb, localToday());
+
+  // Lịch sử làm việc: mọi việc đã tick xong, mới nhất trước, kèm thời điểm tick.
+  if (view === "history") {
+    const { data, error } = await sb
+      .from("tasks")
+      .select("*")
+      .is("deleted_at", null)
+      .eq("completed", true)
+      .not("completed_at", "is", null)
+      .order("completed_at", { ascending: false })
+      .order("id", { ascending: false });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data);
+  }
 
   let q = sb.from("tasks").select("*").is("parent_id", null);
   if (view === "trash") {
     q = q.not("deleted_at", "is", null);
   } else {
-    // Note = checklist bền: hiện mọi việc cha chưa xoá (không lọc theo ngày).
-    q = q.is("deleted_at", null);
+    // Note = checklist các việc chưa xong (việc xong nhảy sang Lịch sử làm việc).
+    q = q.is("deleted_at", null).eq("completed", false);
   }
 
   const { data: parents, error } = await q
-    .order("completed", { ascending: true })
     .order("position", { ascending: true })
     .order("id", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
