@@ -1236,6 +1236,118 @@ input {
   color: var(--text-muted);
 }
 
+/* nhóm việc mẹ trong chi tiết ngày */
+.hist-parent {
+  padding: 6px 0 8px;
+}
+.hist-parent + .hist-parent,
+.task-row + .hist-parent {
+  border-top: 1px solid var(--border);
+}
+.hist-parent-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 6px 4px 2px;
+}
+
+/* ===== Cuốn lịch ===== */
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 1100px;
+  margin-bottom: 12px;
+}
+.cal-nav { display: flex; align-items: center; gap: 8px; }
+.cal-nav button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: var(--bg-card);
+}
+.cal-nav button:hover { background: var(--hover); color: var(--text); }
+.rot { display: inline-flex; transform: rotate(90deg); }
+.rot.rev { transform: rotate(-90deg); }
+.cal-title { font-size: 20px; font-weight: 700; }
+.cal-actions { display: flex; align-items: center; gap: 10px; }
+.cal-today {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  background: var(--bg-card);
+}
+.cal-today:hover { background: var(--hover); }
+
+.cal { max-width: 1100px; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.cal-weekdays { margin-bottom: 2px; }
+.cal-wd {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 8px 10px;
+}
+.cal-grid:not(.cal-weekdays) {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.cal-cell {
+  min-height: 96px;
+  text-align: left;
+  padding: 8px 10px;
+  border-right: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  background: transparent;
+}
+.cal.week .cal-cell { min-height: 160px; }
+/* bỏ viền dư ở mép trái và hàng đầu */
+.cal-grid:not(.cal-weekdays) .cal-cell:nth-child(7n + 1) { border-left: none; }
+.cal-grid:not(.cal-weekdays) .cal-cell:nth-child(-n + 7) { border-top: none; }
+.cal-cell:hover { background: var(--hover); }
+.cal-day { font-size: 14px; font-weight: 600; }
+.cal-cell.muted .cal-day { color: var(--text-faint); }
+.cal-cell.today .cal-day {
+  background: var(--accent);
+  color: var(--accent-fg);
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cal-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #16a34a;
+}
+.cal-count svg { width: 15px; height: 15px; }
+
+@media (max-width: 767px) {
+  .cal-cell { min-height: 66px; padding: 5px 6px; gap: 4px; }
+  .cal-wd { padding: 6px 4px; font-size: 11px; }
+  .cal-count { font-size: 11px; gap: 3px; }
+  .cal-count .cal-cw { display: none; } /* ẩn chữ "công việc", chỉ còn số */
+  .cal-title { font-size: 17px; }
+}
+
 /* ================= Nhật ký tâm trạng ================= */
 .mood-head {
   display: flex;

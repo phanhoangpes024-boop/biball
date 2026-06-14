@@ -13,18 +13,32 @@ export async function GET(req) {
   // Lời nhắc tới hạn (đúng ngày + giờ VN) tự "nhảy" thành mục checklist.
   if (view === "today" || view === "history") await syncReminders(sb, localToday(), vnTime());
 
-  // Lịch sử làm việc: mọi việc đã tick xong, mới nhất trước, kèm thời điểm tick.
+  // Lịch sử làm việc: đếm theo "đơn vị việc" (leaf):
+  //  - việc KHÔNG có việc con = 1 đơn vị
+  //  - việc CÓ việc con      = không tính nó, mỗi việc con là 1 đơn vị
+  // Trả về các đơn vị đã hoàn thành (kèm tên việc mẹ để nhóm khi xem chi tiết).
   if (view === "history") {
-    const { data, error } = await sb
+    const { data: all, error } = await sb
       .from("tasks")
-      .select("*")
-      .is("deleted_at", null)
-      .eq("completed", true)
-      .not("completed_at", "is", null)
-      .order("completed_at", { ascending: false })
-      .order("id", { ascending: false });
+      .select("id,title,parent_id,completed,completed_at")
+      .is("deleted_at", null);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data);
+
+    const parentIds = new Set(all.filter((t) => t.parent_id != null).map((t) => t.parent_id));
+    const titleById = new Map(all.map((t) => [t.id, t.title]));
+
+    const items = all
+      .filter((t) => !parentIds.has(t.id) && t.completed && t.completed_at) // chỉ leaf đã xong
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        parent_id: t.parent_id,
+        parent_title: t.parent_id != null ? titleById.get(t.parent_id) ?? null : null,
+        completed_at: t.completed_at,
+      }))
+      .sort((a, b) => (a.completed_at < b.completed_at ? 1 : -1));
+
+    return NextResponse.json(items);
   }
 
   let q = sb.from("tasks").select("*").is("parent_id", null);
