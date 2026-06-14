@@ -1,38 +1,40 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { api } from "@/lib/client";
+import { optimistic } from "@/lib/swr";
 import { IconRestore, IconX } from "@/components/Icons";
 
+const RKEY = "/api/reminders?view=trash";
+const TKEY = "/api/tasks?view=trash";
+
 export default function TrashView() {
-  const [reminders, setReminders] = useState(null);
-  const [tasks, setTasks] = useState(null);
-  const [error, setError] = useState(null);
+  const { data: reminders, error: rErr, isLoading: rLoad, mutate: mutateR } = useSWR(RKEY);
+  const { data: tasks, error: tErr, isLoading: tLoad, mutate: mutateT } = useSWR(TKEY);
+  const { mutate: gmutate } = useSWRConfig();
 
-  const load = useCallback(() => {
-    Promise.all([api("/api/reminders?view=trash"), api("/api/tasks?view=trash")])
-      .then(([r, t]) => { setReminders(r); setTasks(t); setError(null); })
-      .catch(() => setError("Không tải được thùng rác."));
-  }, []);
+  const restoreReminder = (r) =>
+    optimistic(mutateR, RKEY, (prev = []) => prev.filter((x) => x.id !== r.id),
+      () => api(`/api/reminders/${r.id}`, { method: "PATCH", body: JSON.stringify({ restore: true }) }),
+      () => gmutate("/api/reminders"));
+  const purgeReminder = (r) =>
+    optimistic(mutateR, RKEY, (prev = []) => prev.filter((x) => x.id !== r.id),
+      () => api(`/api/reminders/${r.id}?hard=1`, { method: "DELETE" }));
+  const restoreTask = (t) =>
+    optimistic(mutateT, TKEY, (prev = []) => prev.filter((x) => x.id !== t.id),
+      () => api(`/api/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ restore: true }) }),
+      () => { gmutate("/api/tasks?view=today"); gmutate("/api/tasks?view=history"); });
+  const purgeTask = (t) =>
+    optimistic(mutateT, TKEY, (prev = []) => prev.filter((x) => x.id !== t.id),
+      () => api(`/api/tasks/${t.id}?hard=1`, { method: "DELETE" }));
 
-  useEffect(() => { load(); }, [load]);
-
-  async function act(fn) {
-    try { await fn(); load(); }
-    catch { setError("Thao tác thất bại."); }
-  }
-
-  const restoreReminder = (r) => act(() => api(`/api/reminders/${r.id}`, { method: "PATCH", body: JSON.stringify({ restore: true }) }));
-  const purgeReminder = (r) => act(() => api(`/api/reminders/${r.id}?hard=1`, { method: "DELETE" }));
-  const restoreTask = (t) => act(() => api(`/api/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ restore: true }) }));
-  const purgeTask = (t) => act(() => api(`/api/tasks/${t.id}?hard=1`, { method: "DELETE" }));
-
-  const loading = reminders === null || tasks === null;
-  const empty = !loading && reminders.length === 0 && tasks.length === 0;
+  const error = rErr || tErr;
+  const loading = (!reminders && rLoad) || (!tasks && tLoad);
+  const empty = !loading && (reminders?.length ?? 0) === 0 && (tasks?.length ?? 0) === 0;
 
   return (
     <div className="content">
-      {error && <div className="error-bar">{error}</div>}
+      {error && !reminders && !tasks && <div className="error-bar">Không tải được thùng rác.</div>}
 
       {loading ? (
         <div className="skeleton"><div className="line" /><div className="line" /></div>

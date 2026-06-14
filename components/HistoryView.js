@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { api, dateLabel } from "@/lib/client";
+import { optimistic } from "@/lib/swr";
 import { IconCheck, IconTrash } from "@/components/Icons";
+
+const KEY = "/api/tasks?view=history";
 
 const PERIODS = [
   { key: "day", label: "Ngày" },
@@ -39,27 +43,22 @@ function fmtTime(iso) {
 }
 
 export default function HistoryView() {
-  const [items, setItems] = useState(null);
-  const [error, setError] = useState(null);
+  const { data: items, error, isLoading, mutate } = useSWR(KEY);
+  const { mutate: gmutate } = useSWRConfig();
   const [period, setPeriod] = useState("day");
 
-  const load = useCallback(
-    () =>
-      api("/api/tasks?view=history")
-        .then((d) => { setItems(d); setError(null); })
-        .catch(() => setError("Không tải được lịch sử.")),
-    []
-  );
-  useEffect(() => { load(); }, [load]);
-
-  async function act(fn) {
-    try { await fn(); await load(); }
-    catch { setError("Thao tác thất bại."); }
-  }
+  // Bỏ tick -> rời Lịch sử, quay lại Note.
   const uncheck = (t) =>
-    act(() => api(`/api/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ completed: false }) }));
+    optimistic(mutate, KEY,
+      (prev = []) => prev.filter((x) => x.id !== t.id),
+      () => api(`/api/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ completed: false }) }),
+      () => gmutate("/api/tasks?view=today"));
+
   const remove = (t) =>
-    act(() => api(`/api/tasks/${t.id}`, { method: "DELETE" }));
+    optimistic(mutate, KEY,
+      (prev = []) => prev.filter((x) => x.id !== t.id),
+      () => api(`/api/tasks/${t.id}`, { method: "DELETE" }),
+      () => gmutate("/api/tasks?view=trash"));
 
   const groups = useMemo(() => {
     if (!items) return [];
@@ -81,7 +80,7 @@ export default function HistoryView() {
 
   return (
     <div className="content">
-      {error && <div className="error-bar">{error}</div>}
+      {error && !items && <div className="error-bar">Không tải được lịch sử.</div>}
 
       <div className="seg">
         {PERIODS.map((p) => (
@@ -95,7 +94,7 @@ export default function HistoryView() {
         ))}
       </div>
 
-      {items === null ? (
+      {!items && isLoading ? (
         <div className="skeleton"><div className="line" /><div className="line" /></div>
       ) : total === 0 ? (
         <div className="empty">Chưa có việc nào hoàn thành trong khoảng này.</div>

@@ -1,6 +1,8 @@
-// Network-first service worker: the app always prefers fresh data,
-// but static pages/assets keep working offline from cache.
-const CACHE = "tasks-app-v1";
+// Network-first service worker.
+//  - Khi online: luôn lấy bản mới (app + API), đồng thời lưu cache.
+//  - Khi mạng chập chờn / offline: phục vụ lại từ cache (kể cả dữ liệu API).
+// SWR phía client lo phần stale-while-revalidate + optimistic; SW lo phần offline.
+const CACHE = "biball-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -21,14 +23,12 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  // API data must never be served stale from cache.
-  if (url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
       try {
         const fresh = await fetch(request);
-        if (fresh.ok) cache.put(request, fresh.clone());
+        if (fresh && fresh.ok) cache.put(request, fresh.clone());
         return fresh;
       } catch {
         const cached = await cache.match(request);

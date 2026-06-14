@@ -1,35 +1,48 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import useSWR from "swr";
 import { api, reminderMeta, REPEAT_LABELS } from "@/lib/client";
+import { optimistic } from "@/lib/swr";
 import { IconPlus, IconTrash, IconCheck, IconCircle, IconInfo, IconX } from "@/components/Icons";
 
+const KEY = "/api/reminders";
+
+// body (camelCase API) -> field lạc quan trên object lời nhắc.
+function applyPatch(r, body) {
+  return {
+    ...r,
+    ...(body.title !== undefined ? { title: body.title } : {}),
+    ...(body.dueDate !== undefined ? { due_date: body.dueDate } : {}),
+    ...(body.dueTime !== undefined ? { due_time: body.dueTime } : {}),
+    ...(body.repeat !== undefined ? { repeat: body.repeat } : {}),
+    ...(body.priority !== undefined ? { priority: body.priority } : {}),
+    ...(body.completed !== undefined ? { completed: body.completed } : {}),
+  };
+}
+
 export default function RemindersView() {
-  const [items, setItems] = useState(null);
-  const [error, setError] = useState(null);
+  const { data: items, error, isLoading, mutate } = useSWR(KEY);
   const [detail, setDetail] = useState(null); // lời nhắc đang mở bảng chi tiết
 
-  const load = useCallback(() => {
-    return api("/api/reminders")
-      .then((data) => { setItems(data); setError(null); })
-      .catch(() => setError("Không tải được lời nhắc."));
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  async function act(fn, failMsg) {
-    try { await fn(); await load(); }
-    catch { setError(failMsg); }
-  }
-
-  const addReminder = (title) =>
-    act(() => api("/api/reminders", { method: "POST", body: JSON.stringify({ title }) }), "Không thêm được.");
+  const addReminder = (title) => {
+    const row = {
+      id: `tmp-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+      title, due_date: null, due_time: null, repeat: "none", priority: false, completed: false,
+    };
+    optimistic(mutate, KEY, (prev = []) => [...prev, row],
+      () => api(KEY, { method: "POST", body: JSON.stringify({ title }) }));
+  };
 
   const patch = (id, body) =>
-    act(() => api(`/api/reminders/${id}`, { method: "PATCH", body: JSON.stringify(body) }), "Không lưu được.");
+    optimistic(mutate, KEY,
+      (prev = []) => prev.map((r) => (r.id === id ? applyPatch(r, body) : r)),
+      () => api(`/api/reminders/${id}`, { method: "PATCH", body: JSON.stringify(body) }));
 
   const remove = (id) =>
-    act(() => api(`/api/reminders/${id}`, { method: "DELETE" }), "Không xóa được.");
+    optimistic(mutate, KEY,
+      (prev = []) => prev.filter((r) => r.id !== id),
+      () => api(`/api/reminders/${id}`, { method: "DELETE" }));
 
   // Giữ bảng chi tiết đồng bộ với dữ liệu mới sau mỗi lần lưu.
   useEffect(() => {
@@ -42,14 +55,14 @@ export default function RemindersView() {
   return (
     <>
       <div className="content">
-        {error && <div className="error-bar">{error}</div>}
+        {error && !items && <div className="error-bar">Không tải được lời nhắc.</div>}
         <p className="hint">
           Đặt ngày/giờ cho lời nhắc. Tới ngày, nó tự chuyển sang mục <b>Note</b>.
         </p>
 
-        {items === null ? (
+        {!items && isLoading ? (
           <div className="skeleton"><div className="line" /><div className="line" /></div>
-        ) : items.length === 0 ? (
+        ) : (items?.length ?? 0) === 0 ? (
           <div className="empty">Chưa có lời nhắc nào. Thêm một cái bên dưới nhé 👇</div>
         ) : (
           <div className="card">

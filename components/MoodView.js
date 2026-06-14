@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import useSWR from "swr";
 import { api, localToday } from "@/lib/client";
 import { IconPlus, IconCalendar } from "@/components/Icons";
 
@@ -19,17 +20,22 @@ const MISTAKE_CAUSES = ["Thiếu tập trung", "Thiếu thời gian", "Quá nhi�
 
 export default function MoodView() {
   const [date, setDate] = useState(localToday());
+  // SWR cache theo ngày -> mở lại ngày đã xem là hiện ngay (không tải lại).
+  const { data: row, mutate } = useSWR(`/api/mood?date=${date}`, undefined, { keepPreviousData: false });
   const [data, setData] = useState(null); // null = đang tải
   const [status, setStatus] = useState(""); // "saving" | "saved" | "error"
   const skipSave = useRef(false);
+  const loadedDate = useRef(null);
 
-  // Tải nhật ký theo ngày
+  // Nạp form khi có dữ liệu của ngày đang chọn (từ cache thì tức thì).
   useEffect(() => {
-    setData(null);
-    api(`/api/mood?date=${date}`)
-      .then((row) => { skipSave.current = true; setData(row?.data ?? {}); setStatus(row ? "saved" : ""); })
-      .catch(() => { skipSave.current = true; setData({}); setStatus("error"); });
-  }, [date]);
+    if (loadedDate.current === date) return;
+    if (row === undefined) { setData(null); return; } // đang tải ngày mới
+    loadedDate.current = date;
+    skipSave.current = true;
+    setData(row?.data ?? {});
+    setStatus(row ? "saved" : "");
+  }, [date, row]);
 
   // Tự động lưu (debounce) khi có chỉnh sửa
   useEffect(() => {
@@ -38,11 +44,11 @@ export default function MoodView() {
     setStatus("saving");
     const t = setTimeout(() => {
       api("/api/mood", { method: "PUT", body: JSON.stringify({ date, data }) })
-        .then(() => setStatus("saved"))
+        .then(() => { setStatus("saved"); mutate({ entry_date: date, data }, { revalidate: false }); })
         .catch(() => setStatus("error"));
     }, 700);
     return () => clearTimeout(t);
-  }, [data, date]);
+  }, [data, date]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = useCallback((key, val) => setData((d) => ({ ...d, [key]: val })), []);
   const setIdx = useCallback((key, i, val) =>

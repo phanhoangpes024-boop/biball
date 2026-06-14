@@ -1,5 +1,14 @@
 import "./globals.css";
+import { Be_Vietnam_Pro } from "next/font/google";
 import RegisterSW from "@/components/RegisterSW";
+import Providers from "@/components/Providers";
+
+const sans = Be_Vietnam_Pro({
+  subsets: ["vietnamese", "latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-sans",
+});
 
 export const metadata = {
   title: "Note & Lời nhắc",
@@ -23,9 +32,9 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi">
+    <html lang="vi" className={sans.variable}>
       <body>
-        {children}
+        <Providers>{children}</Providers>
         <RegisterSW />
       </body>
     </html>

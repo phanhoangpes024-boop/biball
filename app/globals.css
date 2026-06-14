@@ -12,6 +12,7 @@
   --accent-fg: #ffffff;
   --danger: #ef4444;
   --mood: #7c6cf0;
+  --branch: #d6d6dc;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   --radius: 14px;
 }
@@ -29,6 +30,7 @@
     --active: #2e2e36;
     --accent: #f2f2f5;
     --accent-fg: #16161a;
+    --branch: #3c3c45;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
 }
@@ -45,8 +47,8 @@ body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -100,6 +102,7 @@ input {
   font-size: 17px;
   padding: 6px 8px 18px;
 }
+
 .brand-logo {
   width: 26px;
   height: 26px;
@@ -126,19 +129,23 @@ input {
   text-align: left;
   transition: background 0.12s ease;
 }
+
 .nav-item:hover {
   background: var(--hover);
 }
+
 .nav-item.active {
   background: var(--active);
   font-weight: 600;
 }
+
 .nav-item .icon {
   width: 20px;
   display: inline-flex;
   justify-content: center;
   color: var(--text-muted);
 }
+
 .nav-item .count {
   margin-left: auto;
   font-size: 12px;
@@ -156,6 +163,7 @@ input {
   font-weight: 600;
   padding: 22px 12px 8px;
 }
+
 .section-label button {
   color: var(--text-muted);
   font-size: 18px;
@@ -163,6 +171,7 @@ input {
   border-radius: 6px;
   padding: 0 5px;
 }
+
 .section-label button:hover {
   background: var(--hover);
   color: var(--text);
@@ -190,10 +199,12 @@ input {
     transition: transform 0.22s ease;
     box-shadow: none;
   }
+
   .sidebar.open {
     transform: translateX(0);
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
   }
+
   .scrim {
     display: block;
     position: fixed;
@@ -204,6 +215,7 @@ input {
     pointer-events: none;
     transition: opacity 0.22s ease;
   }
+
   .scrim.show {
     opacity: 1;
     pointer-events: auto;
@@ -217,13 +229,16 @@ input {
   gap: 10px;
   padding: 18px 20px 10px;
 }
+
 .menu-btn {
   display: none;
 }
+
 @media (max-width: 767px) {
   .menu-btn {
     display: flex;
   }
+
   .topbar {
     padding-top: calc(12px + env(safe-area-inset-top));
   }
@@ -237,6 +252,7 @@ input {
   font-weight: 700;
   min-width: 0;
 }
+
 .title span.txt {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -259,6 +275,7 @@ input {
   color: var(--text-muted);
   flex-shrink: 0;
 }
+
 .icon-btn:hover {
   background: var(--hover);
   color: var(--text);
@@ -279,6 +296,7 @@ input {
   max-width: 1100px;
   box-shadow: var(--shadow);
 }
+
 @media (max-width: 767px) {
   .card {
     border: none;
@@ -288,7 +306,7 @@ input {
   }
 }
 
-.task-group + .task-group {
+.task-group+.task-group {
   border-top: 1px solid var(--border);
 }
 
@@ -298,7 +316,9 @@ input {
   align-items: flex-start;
   gap: 14px;
   padding: 13px 4px;
+  position: relative;
 }
+
 .task-row.sub {
   padding-left: 42px;
 }
@@ -306,6 +326,7 @@ input {
 .check {
   width: 22px;
   height: 22px;
+  margin-top: 1px;
   border: 1.8px solid var(--text-faint);
   border-radius: 7px;
   flex-shrink: 0;
@@ -315,9 +336,50 @@ input {
   color: var(--accent-fg);
   transition: background 0.12s ease, border-color 0.12s ease;
 }
+
+/* ===== Nhánh cây nối việc mẹ -> việc con ===== */
+/* Trunk của việc mẹ: chạm vào đáy ô vuông việc mẹ rồi chạy xuống. */
+.task-row.has-kids::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 34px;
+  bottom: 0;
+  width: 2px;
+  background: var(--branch);
+}
+
+.branch::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--branch);
+}
+
+/* Việc con cuối: trunk dừng ngay tại nhánh ngang (-> hình └). */
+.branch.last::before {
+  bottom: auto;
+  height: 25px;
+}
+
+/* Nhánh ngang: kéo dài CHẠM tới ô vuông của việc con. */
+.branch::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 25px;
+  width: 28px;
+  height: 2px;
+  background: var(--branch);
+}
+
 .check:hover {
   border-color: var(--text-muted);
 }
+
 .check.checked {
   background: var(--accent);
   border-color: var(--accent);
@@ -340,9 +402,11 @@ input {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
 .task-row.sub .task-title {
   font-size: 15px;
 }
+
 .task-title.done {
   color: var(--text-faint);
   text-decoration: line-through;
@@ -354,16 +418,19 @@ input {
   opacity: 0;
   transition: opacity 0.12s ease;
 }
+
 .task-row:hover .row-actions,
 .task-row:focus-within .row-actions {
   opacity: 1;
 }
+
 /* On touch devices there is no hover — always show actions. */
 @media (hover: none) {
   .row-actions {
     opacity: 1;
   }
 }
+
 .row-actions button {
   color: var(--text-faint);
   padding: 6px;
@@ -371,9 +438,79 @@ input {
   display: flex;
   align-items: center;
 }
+
 .row-actions button:hover {
   background: var(--hover);
   color: var(--text);
+}
+
+/* Nút 3 chấm + menu trên mỗi việc */
+.row-more {
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 30px;
+  height: 22px;
+  padding: 0;
+  border-radius: 8px;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row-more svg {
+  width: 18px;
+  height: 18px;
+}
+
+.row-more:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.row-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 178px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.16);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.row-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.row-menu button svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+.row-menu button:hover {
+  background: var(--hover);
+}
+
+.row-menu button.danger {
+  color: var(--danger);
+}
+
+.row-menu button.danger svg {
+  color: var(--danger);
 }
 
 /* "+ thêm việc con" row */
@@ -386,18 +523,23 @@ input {
   width: 100%;
   text-align: left;
   font-size: 15px;
+  position: relative;
 }
+
 .add-row.sub {
   padding-left: 42px;
 }
+
 .add-row:hover {
   color: var(--text-muted);
 }
+
 .add-row .plus {
   width: 22px;
   display: inline-flex;
   justify-content: center;
 }
+
 .add-row input {
   flex: 1;
   min-width: 0;
@@ -407,6 +549,7 @@ input {
   font-size: 15px;
   color: var(--text);
 }
+
 .add-row input::placeholder {
   color: var(--text-faint);
 }
@@ -432,6 +575,7 @@ input {
 .composer-wrap {
   padding: 8px 20px calc(14px + env(safe-area-inset-bottom));
 }
+
 .composer {
   max-width: 1100px;
   display: flex;
@@ -443,6 +587,7 @@ input {
   padding: 8px 8px 8px 18px;
   box-shadow: var(--shadow);
 }
+
 .composer input {
   flex: 1;
   min-width: 0;
@@ -452,9 +597,11 @@ input {
   background: transparent;
   color: var(--text);
 }
+
 .composer input::placeholder {
   color: var(--text-faint);
 }
+
 .composer .send {
   width: 40px;
   height: 40px;
@@ -467,15 +614,17 @@ input {
   flex-shrink: 0;
   transition: opacity 0.12s ease;
 }
+
 .composer .send:disabled {
   opacity: 0.35;
   cursor: default;
 }
 
 /* ================= Group headers ================= */
-.group + .group {
+.group+.group {
   margin-top: 18px;
 }
+
 .group-h {
   font-size: 13px;
   font-weight: 600;
@@ -485,9 +634,11 @@ input {
   align-items: center;
   gap: 8px;
 }
+
 .group-h.overdue {
   color: var(--danger);
 }
+
 .group-count {
   font-weight: 500;
   font-size: 12px;
@@ -502,6 +653,7 @@ input {
   position: relative;
   flex-shrink: 0;
 }
+
 .due-badge {
   display: flex;
   align-items: center;
@@ -512,30 +664,37 @@ input {
   color: var(--text-muted);
   white-space: nowrap;
 }
+
 .due-badge svg {
   width: 16px;
   height: 16px;
 }
+
 .due-badge:hover {
   background: var(--hover);
   color: var(--text);
 }
+
 .due-badge.none {
   color: var(--text-faint);
 }
+
 .due-badge.overdue {
   color: var(--danger);
 }
+
 .due-badge.today {
   color: var(--text);
   font-weight: 600;
 }
+
 @media (max-width: 767px) {
   .due-badge {
     font-size: 12px;
     gap: 4px;
     padding: 3px 6px;
   }
+
   /* "Hôm nay · 14:00" -> "14:00" style compactness: clip long labels instead of squeezing the title */
   .due-badge span {
     max-width: 96px;
@@ -550,6 +709,7 @@ input {
   inset: 0;
   z-index: 15;
 }
+
 .popover {
   position: absolute;
   right: 0;
@@ -565,23 +725,28 @@ input {
   flex-direction: column;
   gap: 10px;
 }
+
 .popover .quick {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
+
 .popover .quick button {
   font-size: 13px;
   padding: 5px 10px;
   border-radius: 999px;
   background: var(--hover);
 }
+
 .popover .quick button:hover {
   background: var(--active);
 }
+
 .popover .quick button.muted {
   color: var(--text-muted);
 }
+
 .popover label {
   display: flex;
   align-items: center;
@@ -590,6 +755,7 @@ input {
   font-size: 13px;
   color: var(--text-muted);
 }
+
 .popover input[type="date"],
 .popover input[type="time"] {
   border: 1px solid var(--border);
@@ -600,6 +766,7 @@ input {
   color: var(--text);
   color-scheme: light dark;
 }
+
 .popover .pop-done {
   align-self: flex-end;
   font-size: 13px;
@@ -617,6 +784,7 @@ input {
   max-width: 1100px;
   padding: 0 4px 14px;
 }
+
 .today-pill {
   font-size: 11px;
   font-weight: 600;
@@ -627,6 +795,7 @@ input {
   padding: 2px 8px;
   border-radius: 999px;
 }
+
 .routine-time {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -638,6 +807,7 @@ input {
   flex-shrink: 0;
   width: 88px;
 }
+
 .routine-add input[type="text"],
 .routine-add input:not([type]) {
   font-size: 15px;
@@ -658,9 +828,11 @@ input {
   gap: 12px;
   padding: 12px 4px;
 }
-.rem-row + .rem-row {
+
+.rem-row+.rem-row {
   border-top: 1px solid var(--border);
 }
+
 .rem-check {
   width: 22px;
   height: 22px;
@@ -674,13 +846,16 @@ input {
   color: var(--accent-fg);
   transition: background 0.12s ease, border-color 0.12s ease;
 }
+
 .rem-check:hover {
   border-color: var(--text-muted);
 }
+
 .rem-check.checked {
   background: var(--accent);
   border-color: var(--accent);
 }
+
 .rem-main {
   flex: 1;
   min-width: 0;
@@ -688,11 +863,13 @@ input {
   flex-direction: column;
   gap: 2px;
 }
+
 .rem-titlewrap {
   display: flex;
   align-items: flex-start;
   gap: 6px;
 }
+
 .rem-bang {
   color: #3b82f6;
   font-weight: 800;
@@ -700,6 +877,7 @@ input {
   line-height: 1.45;
   flex-shrink: 0;
 }
+
 .rem-title {
   flex: 1;
   min-width: 0;
@@ -717,17 +895,21 @@ input {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
 .rem-title.done {
   color: var(--text-faint);
   text-decoration: line-through;
 }
+
 .rem-meta {
   font-size: 13px;
   color: var(--danger);
 }
+
 .rem-meta.future {
   color: var(--text-muted);
 }
+
 .rem-info,
 .rem-del {
   flex-shrink: 0;
@@ -738,10 +920,12 @@ input {
   display: flex;
   align-items: center;
 }
+
 .rem-info:hover {
   background: var(--hover);
   color: #3b82f6;
 }
+
 .rem-del:hover {
   background: var(--hover);
   color: var(--danger);
@@ -754,6 +938,7 @@ input {
   z-index: 40;
   background: rgba(0, 0, 0, 0.45);
 }
+
 .sheet {
   position: fixed;
   z-index: 41;
@@ -770,6 +955,7 @@ input {
   flex-direction: column;
   overflow: hidden;
 }
+
 .sheet-head {
   display: flex;
   align-items: center;
@@ -777,12 +963,14 @@ input {
   padding: 12px 12px;
   border-bottom: 1px solid var(--border);
 }
+
 .sheet-title {
   flex: 1;
   text-align: center;
   font-weight: 600;
   font-size: 16px;
 }
+
 .sheet-x {
   width: 34px;
   height: 34px;
@@ -793,15 +981,18 @@ input {
   align-items: center;
   justify-content: center;
 }
+
 .sheet-done {
   font-weight: 600;
   color: #3b82f6;
   padding: 6px 8px;
 }
+
 .sheet-body {
   padding: 14px;
   overflow-y: auto;
 }
+
 .sheet-group {
   font-size: 12px;
   letter-spacing: 0.04em;
@@ -809,9 +1000,11 @@ input {
   color: var(--text-muted);
   padding: 14px 4px 8px;
 }
+
 .sheet-group:first-child {
   padding-top: 0;
 }
+
 .sheet-row {
   display: flex;
   align-items: center;
@@ -822,20 +1015,24 @@ input {
   border-radius: 12px;
   margin-bottom: 8px;
 }
+
 .sheet-label {
   font-size: 15px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .sheet-bang {
   font-size: 15px;
 }
+
 .sheet-right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .sheet-input,
 .sheet-select {
   border: 1px solid var(--border);
@@ -847,6 +1044,7 @@ input {
   color-scheme: light dark;
   font-family: inherit;
 }
+
 .sheet-delete {
   display: flex;
   align-items: center;
@@ -872,6 +1070,7 @@ input {
   flex-shrink: 0;
   transition: background 0.18s ease;
 }
+
 .switch .knob {
   display: block;
   width: 24px;
@@ -881,9 +1080,11 @@ input {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform 0.18s ease;
 }
+
 .switch.on {
   background: #34c759;
 }
+
 .switch.on .knob {
   transform: translateX(18px);
 }
@@ -895,6 +1096,7 @@ input {
   gap: 12px;
   max-width: 1100px;
 }
+
 .note-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -908,14 +1110,17 @@ input {
   min-height: 90px;
   transition: border-color 0.12s ease;
 }
+
 .note-card:hover {
   border-color: var(--text-faint);
 }
+
 .note-title {
   font-weight: 600;
   font-size: 15px;
   word-break: break-word;
 }
+
 .note-body {
   font-size: 14px;
   color: var(--text-muted);
@@ -926,6 +1131,7 @@ input {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
 .note-foot {
   margin-top: auto;
   display: flex;
@@ -934,20 +1140,24 @@ input {
   font-size: 12px;
   color: var(--text-faint);
 }
+
 .note-foot button {
   color: var(--text-faint);
   padding: 6px;
   border-radius: 8px;
   display: flex;
 }
+
 .note-foot button:hover {
   background: var(--hover);
   color: var(--danger);
 }
+
 .note-card.editing {
   cursor: text;
   padding: 14px;
 }
+
 .note-card textarea {
   border: none;
   outline: none;
@@ -963,6 +1173,7 @@ input {
 .note-composer {
   align-items: flex-end;
 }
+
 .note-composer textarea {
   flex: 1;
   min-width: 0;
@@ -976,6 +1187,7 @@ input {
   line-height: 1.5;
   padding: 8px 0;
 }
+
 .note-composer textarea::placeholder {
   color: var(--text-faint);
 }
@@ -989,6 +1201,7 @@ input {
   padding: 3px;
   margin: 2px 4px 16px;
 }
+
 .seg-btn {
   padding: 6px 18px;
   border-radius: 8px;
@@ -996,12 +1209,14 @@ input {
   color: var(--text-muted);
   transition: background 0.12s ease, color 0.12s ease;
 }
+
 .seg-btn.active {
   background: var(--bg-card);
   color: var(--text);
   font-weight: 600;
   box-shadow: var(--shadow);
 }
+
 .hist-main {
   flex: 1;
   min-width: 0;
@@ -1009,11 +1224,13 @@ input {
   flex-direction: column;
   gap: 2px;
 }
+
 .hist-title {
   font-size: 16px;
   color: var(--text);
   word-break: break-word;
 }
+
 .hist-time {
   font-size: 13px;
   color: var(--text-muted);
@@ -1028,24 +1245,28 @@ input {
   flex-wrap: wrap;
   max-width: 1100px;
 }
+
 .mood-sub {
   font-size: 14px;
   color: var(--text-muted);
   max-width: 640px;
   padding: 2px 4px;
 }
+
 .mood-actions {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .mood-status {
   font-size: 13px;
   color: var(--text-muted);
   min-width: 52px;
   text-align: right;
 }
+
 .mood-date {
   display: inline-flex;
   align-items: center;
@@ -1056,7 +1277,12 @@ input {
   background: var(--bg-card);
   color: var(--text-muted);
 }
-.mood-date svg { width: 16px; height: 16px; }
+
+.mood-date svg {
+  width: 16px;
+  height: 16px;
+}
+
 .mood-date input {
   border: none;
   outline: none;
@@ -1065,6 +1291,7 @@ input {
   font-size: 14px;
   color-scheme: light dark;
 }
+
 .mood-new {
   display: inline-flex;
   align-items: center;
@@ -1076,8 +1303,15 @@ input {
   font-size: 14px;
   font-weight: 600;
 }
-.mood-new svg { width: 16px; height: 16px; }
-.mood-new:hover { filter: brightness(1.06); }
+
+.mood-new svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mood-new:hover {
+  filter: brightness(1.06);
+}
 
 .mood-grid {
   display: grid;
@@ -1087,6 +1321,7 @@ input {
   max-width: 1100px;
   margin-top: 14px;
 }
+
 .mood-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1097,11 +1332,16 @@ input {
   flex-direction: column;
   gap: 10px;
 }
-.mood-card.full { grid-column: 1 / -1; }
+
+.mood-card.full {
+  grid-column: 1 / -1;
+}
+
 .mood-card.special {
   background: color-mix(in srgb, #f5c518 14%, var(--bg-card));
   border-color: color-mix(in srgb, #f5c518 30%, var(--border));
 }
+
 .mood-ch {
   display: flex;
   align-items: center;
@@ -1109,6 +1349,7 @@ input {
   font-weight: 600;
   font-size: 15px;
 }
+
 .mood-badge {
   width: 24px;
   height: 24px;
@@ -1122,7 +1363,12 @@ input {
   justify-content: center;
   flex-shrink: 0;
 }
-.mood-badge.moon { background: transparent; font-size: 18px; }
+
+.mood-badge.moon {
+  background: transparent;
+  font-size: 18px;
+}
+
 .mood-label {
   font-size: 13px;
   color: var(--text-muted);
@@ -1135,6 +1381,7 @@ input {
   flex-wrap: wrap;
   gap: 6px;
 }
+
 .mood-chip {
   display: flex;
   flex-direction: column;
@@ -1146,20 +1393,38 @@ input {
   border-radius: 12px;
   background: var(--hover);
 }
-.mood-chip .emo { font-size: 24px; line-height: 1; }
-.mood-chip .cap { font-size: 11px; color: var(--text-muted); text-align: center; }
+
+.mood-chip .emo {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.mood-chip .cap {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .mood-chip .dot {
   width: 13px;
   height: 13px;
   border-radius: 50%;
   border: 1.5px solid var(--text-faint);
 }
+
 .mood-chip.on {
   border-color: var(--mood);
   background: color-mix(in srgb, var(--mood) 14%, var(--bg-card));
 }
-.mood-chip.on .cap { color: var(--text); }
-.mood-chip.on .dot { border-color: var(--mood); background: var(--mood); }
+
+.mood-chip.on .cap {
+  color: var(--text);
+}
+
+.mood-chip.on .dot {
+  border-color: var(--mood);
+  background: var(--mood);
+}
 
 /* thang 1-10 */
 .mood-subgrid {
@@ -1167,7 +1432,13 @@ input {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-@media (max-width: 480px) { .mood-subgrid { grid-template-columns: 1fr; } }
+
+@media (max-width: 480px) {
+  .mood-subgrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .mood-subbox {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -1176,7 +1447,13 @@ input {
   flex-direction: column;
   gap: 8px;
 }
-.mood-scale { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.mood-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .scale-dot {
   width: 28px;
   height: 28px;
@@ -1185,6 +1462,7 @@ input {
   font-size: 13px;
   color: var(--text-muted);
 }
+
 .scale-dot.on {
   background: var(--mood);
   border-color: var(--mood);
@@ -1193,13 +1471,35 @@ input {
 }
 
 /* sao chấm điểm */
-.mood-stars { display: flex; align-items: center; gap: 4px; }
-.mood-stars .star { font-size: 26px; line-height: 1; color: var(--text-faint); }
-.mood-stars .star.on { color: #f5b301; }
-.mood-stars .star-val { margin-left: 8px; font-size: 14px; color: var(--text-muted); }
+.mood-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mood-stars .star {
+  font-size: 26px;
+  line-height: 1;
+  color: var(--text-faint);
+}
+
+.mood-stars .star.on {
+  color: #f5b301;
+}
+
+.mood-stars .star-val {
+  margin-left: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
 
 /* checkbox nhóm */
-.mood-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.mood-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .mood-check {
   display: inline-flex;
   align-items: center;
@@ -1210,6 +1510,7 @@ input {
   font-size: 14px;
   color: var(--text);
 }
+
 .mood-check .box {
   width: 16px;
   height: 16px;
@@ -1217,10 +1518,12 @@ input {
   border: 1.5px solid var(--text-faint);
   flex-shrink: 0;
 }
+
 .mood-check.on {
   border-color: var(--mood);
   background: color-mix(in srgb, var(--mood) 12%, var(--bg-card));
 }
+
 .mood-check.on .box {
   background: var(--mood);
   border-color: var(--mood);
@@ -1243,12 +1546,29 @@ input {
   outline: none;
   width: 100%;
 }
-.mood-area { resize: none; overflow: hidden; line-height: 1.5; }
+
+.mood-area {
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
 .mood-input:focus,
-.mood-area:focus { border-color: var(--mood); }
+.mood-area:focus {
+  border-color: var(--mood);
+}
+
 .mood-input::placeholder,
-.mood-area::placeholder { color: var(--text-faint); }
-.mood-numrow { display: flex; align-items: center; gap: 10px; }
+.mood-area::placeholder {
+  color: var(--text-faint);
+}
+
+.mood-numrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .mood-num {
   width: 24px;
   height: 24px;
@@ -1266,6 +1586,7 @@ input {
 .skeleton {
   max-width: 1100px;
 }
+
 .skeleton .line {
   height: 48px;
   border-radius: 12px;
@@ -1274,6 +1595,7 @@ input {
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
 }
+
 @keyframes shimmer {
   to {
     background-position: -200% 0;
