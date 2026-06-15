@@ -229,8 +229,8 @@ function TaskRow({ task, sub, last, hasKids, onToggle, onRename, onDelete, onHol
         }}
       />
 
-      {/* Hẹn giờ đã đặt -> hiện nhãn, bấm để sửa */}
-      {meta && (
+      {/* Hẹn giờ đã đặt -> hiện nhãn, bấm để sửa. Việc từ lời nhắc thì ẩn nhãn ngày. */}
+      {meta && !task.from_reminder && (
         <button className={`due-badge ${meta.state}`} onClick={() => setDueOpen(true)} title="Sửa ngày">
           <IconCalendar />
           <span>{meta.label}</span>
