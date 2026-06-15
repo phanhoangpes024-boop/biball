@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IconNote, IconTrash,
   IconChevron, IconMenu, IconBell, IconHistory, IconHeart,
@@ -22,6 +22,10 @@ const NAV = [
 export default function Page() {
   const [view, setView] = useState({ type: "notes", label: "Note" });
   const [drawer, setDrawer] = useState(false);
+  // Chỉ render nội dung sau khi mount -> lần render đầu ở client khớp server,
+  // tránh lỗi hydration (SWR đọc cache localStorage ngay từ render đầu).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const selectView = (v) => {
     setView(v);
@@ -45,7 +49,11 @@ export default function Page() {
           </h1>
         </header>
 
-        {view.type === "reminders" ? (
+        {!mounted ? (
+          <div className="content">
+            <div className="skeleton"><div className="line" /><div className="line" /><div className="line" /></div>
+          </div>
+        ) : view.type === "reminders" ? (
           <RemindersView />
         ) : view.type === "history" ? (
           <HistoryView />
