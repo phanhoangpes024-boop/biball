@@ -1,4 +1,4 @@
-import { supabaseAdmin, localToday, vnTime } from "@/lib/supabase";
+import { supabaseAdmin, localToday } from "@/lib/supabase";
 import { syncReminders } from "@/lib/reminders";
 import { NextResponse } from "next/server";
 
@@ -10,33 +10,38 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const view = searchParams.get("view") || "today";
 
-  // Lời nhắc tới hạn (đúng ngày + giờ VN) tự "nhảy" thành mục checklist.
-  if (view === "today" || view === "history") await syncReminders(sb, localToday(), vnTime());
+  // Lời nhắc tới hạn (theo NGÀY, giờ VN) tự "nhảy" thành mục checklist.
+  // Chỉ chạy ở view=today để tránh 2 lần đồng bộ song song tạo task trùng.
+  if (view === "today") await syncReminders(sb, localToday());
 
   // Lịch sử làm việc: đếm theo "đơn vị việc" (leaf):
-  //  - việc KHÔNG có việc con = 1 đơn vị
-  //  - việc CÓ việc con      = không tính nó, mỗi việc con là 1 đơn vị
-  // Trả về các đơn vị đã hoàn thành (kèm tên việc mẹ để nhóm khi xem chi tiết).
+  //  - việc KHÔNG có việc con = 1 đơn vị; việc CÓ việc con -> mỗi việc con là 1 đơn vị.
+  // Trả về các đơn vị đã HOÀN THÀNH và TẠM HOÃN (kèm tên việc mẹ + lý do hoãn).
   if (view === "history") {
     const { data: all, error } = await sb
       .from("tasks")
-      .select("id,title,parent_id,completed,completed_at")
+      .select("id,title,parent_id,completed,completed_at,on_hold,hold_note,held_at")
       .is("deleted_at", null);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const parentIds = new Set(all.filter((t) => t.parent_id != null).map((t) => t.parent_id));
     const titleById = new Map(all.map((t) => [t.id, t.title]));
+    const leaves = all.filter((t) => !parentIds.has(t.id));
+    const base = (t) => ({
+      id: t.id,
+      title: t.title,
+      parent_id: t.parent_id,
+      parent_title: t.parent_id != null ? titleById.get(t.parent_id) ?? null : null,
+    });
 
-    const items = all
-      .filter((t) => !parentIds.has(t.id) && t.completed && t.completed_at) // chỉ leaf đã xong
-      .map((t) => ({
-        id: t.id,
-        title: t.title,
-        parent_id: t.parent_id,
-        parent_title: t.parent_id != null ? titleById.get(t.parent_id) ?? null : null,
-        completed_at: t.completed_at,
-      }))
-      .sort((a, b) => (a.completed_at < b.completed_at ? 1 : -1));
+    const items = [
+      ...leaves
+        .filter((t) => t.completed && t.completed_at && !t.on_hold)
+        .map((t) => ({ ...base(t), type: "done", at: t.completed_at, note: null })),
+      ...leaves
+        .filter((t) => t.on_hold && t.held_at)
+        .map((t) => ({ ...base(t), type: "hold", at: t.held_at, note: t.hold_note })),
+    ].sort((a, b) => (a.at < b.at ? 1 : -1));
 
     return NextResponse.json(items);
   }
@@ -45,8 +50,8 @@ export async function GET(req) {
   if (view === "trash") {
     q = q.not("deleted_at", "is", null);
   } else {
-    // Note = checklist các việc chưa xong (việc xong nhảy sang Lịch sử làm việc).
-    q = q.is("deleted_at", null).eq("completed", false);
+    // Note = việc đang làm (chưa xong, chưa tạm hoãn). Xong/hoãn -> Lịch sử làm việc.
+    q = q.is("deleted_at", null).eq("completed", false).eq("on_hold", false);
   }
 
   const { data: parents, error } = await q
@@ -62,6 +67,7 @@ export async function GET(req) {
       .select("*")
       .in("parent_id", ids)
       .is("deleted_at", null)
+      .eq("on_hold", false) // việc con tạm hoãn -> ẩn khỏi Note
       .order("position", { ascending: true })
       .order("id", { ascending: true });
     if (kErr) return NextResponse.json({ error: kErr.message }, { status: 500 });

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { api, localToday, addDays, dueMeta } from "@/lib/client";
 import { optimistic } from "@/lib/swr";
-import { IconCalendar, IconCheck, IconPlus, IconTrash, IconBell, IconDots } from "@/components/Icons";
+import { IconCalendar, IconCheck, IconPlus, IconTrash, IconBang, IconDots } from "@/components/Icons";
 
 const TASKS_KEY = "/api/tasks?view=today";
 const HISTORY_KEY = "/api/tasks?view=history";
@@ -70,6 +70,16 @@ export default function TasksView() {
       (prev = []) => removeTask(prev, task.id),
       () => api(`/api/tasks/${task.id}`, { method: "DELETE" }),
       () => gmutate(TRASH_KEY)
+    );
+
+  // Tạm hoãn (kèm lý do) -> rời Note, sang Lịch sử làm việc.
+  const holdTask = (task, note) =>
+    optimistic(
+      mutate,
+      TASKS_KEY,
+      (prev = []) => removeTask(prev, task.id),
+      () => api(`/api/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify({ hold: true, holdNote: note }) }),
+      () => gmutate(HISTORY_KEY)
     );
 
   const setDue = (task, patch) =>
@@ -140,6 +150,7 @@ export default function TasksView() {
                     onToggle={toggleTask}
                     onRename={renameTask}
                     onDelete={deleteTask}
+                    onHold={holdTask}
                     onSetDue={setDue}
                     onDueClose={() => mutate()}
                     onAddSub={(title) => addTask({ title, parentId: t.id })}
@@ -157,9 +168,9 @@ export default function TasksView() {
 }
 
 /* ================= Task group (parent + subtasks) ================= */
-function TaskGroup({ task, onToggle, onRename, onDelete, onSetDue, onDueClose, onAddSub }) {
+function TaskGroup({ task, onToggle, onRename, onDelete, onHold, onSetDue, onDueClose, onAddSub }) {
   const [adding, setAdding] = useState(false);
-  const rowProps = { onToggle, onRename, onDelete, onSetDue, onDueClose };
+  const rowProps = { onToggle, onRename, onDelete, onHold, onSetDue, onDueClose };
   const kids = task.children ?? [];
 
   return (
@@ -175,10 +186,11 @@ function TaskGroup({ task, onToggle, onRename, onDelete, onSetDue, onDueClose, o
   );
 }
 
-function TaskRow({ task, sub, last, hasKids, onToggle, onRename, onDelete, onSetDue, onDueClose, onAddSub }) {
+function TaskRow({ task, sub, last, hasKids, onToggle, onRename, onDelete, onHold, onSetDue, onDueClose, onAddSub }) {
   const [title, setTitle] = useState(task.title);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dueOpen, setDueOpen] = useState(false);
+  const [holdOpen, setHoldOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => { setTitle(task.title); }, [task.title]);
 
@@ -217,19 +229,15 @@ function TaskRow({ task, sub, last, hasKids, onToggle, onRename, onDelete, onSet
         }}
       />
 
-      {task.from_reminder && (
-        <span className="tag" title="Từ lời nhắc"><IconBell /></span>
-      )}
-
       {/* Hẹn giờ đã đặt -> hiện nhãn, bấm để sửa */}
       {meta && (
-        <button className={`due-badge ${meta.state}`} onClick={() => setDueOpen(true)} title="Sửa hẹn giờ">
+        <button className={`due-badge ${meta.state}`} onClick={() => setDueOpen(true)} title="Sửa ngày">
           <IconCalendar />
           <span>{meta.label}</span>
         </button>
       )}
 
-      {/* Nút 3 chấm: gom Hẹn giờ / Thêm việc con / Xóa */}
+      {/* Nút 3 chấm: gom Hẹn giờ / Tạm hoãn / Thêm việc con / Xóa */}
       <div className="due-wrap">
         <button className="row-more" onClick={() => setMenuOpen(true)} title="Tùy chọn" aria-label="Tùy chọn">
           <IconDots />
@@ -241,6 +249,9 @@ function TaskRow({ task, sub, last, hasKids, onToggle, onRename, onDelete, onSet
             <div className="row-menu">
               <button onClick={() => { setMenuOpen(false); setDueOpen(true); }}>
                 <IconCalendar /> Hẹn giờ
+              </button>
+              <button className="warn" onClick={() => { setMenuOpen(false); setHoldOpen(true); }}>
+                <IconBang /> Tạm hoãn
               </button>
               {!sub && onAddSub && (
                 <button onClick={() => { setMenuOpen(false); onAddSub(); }}>
@@ -261,8 +272,43 @@ function TaskRow({ task, sub, last, hasKids, onToggle, onRename, onDelete, onSet
             onClose={() => { setDueOpen(false); onDueClose?.(); }}
           />
         )}
+
+        {holdOpen && (
+          <HoldEditor
+            onConfirm={(note) => { setHoldOpen(false); onHold(task, note); }}
+            onClose={() => setHoldOpen(false)}
+          />
+        )}
       </div>
     </div>
+  );
+}
+
+/* ================= Popup Tạm hoãn (ghi lý do) ================= */
+function HoldEditor({ onConfirm, onClose }) {
+  const [note, setNote] = useState("");
+  const ref = useRef(null);
+  useEffect(() => { ref.current?.focus(); }, []);
+  return (
+    <>
+      <div className="pop-overlay" onClick={onClose} />
+      <div className="popover hold-pop">
+        <div className="hold-head"><IconBang /> Tạm hoãn việc này</div>
+        <textarea
+          ref={ref}
+          className="hold-note"
+          rows={3}
+          placeholder="Lý do tạm hoãn (tùy chọn)…"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onConfirm(note); }}
+        />
+        <div className="hold-actions">
+          <button className="muted" onClick={onClose}>Hủy</button>
+          <button className="pop-done warn-btn" onClick={() => onConfirm(note)}>Tạm hoãn</button>
+        </div>
+      </div>
+    </>
   );
 }
 

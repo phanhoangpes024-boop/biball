@@ -11,6 +11,7 @@
   --accent: #1c1c1e;
   --accent-fg: #ffffff;
   --danger: #ef4444;
+  --warn: #f59e0b;
   --mood: #7c6cf0;
   --branch: #d6d6dc;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -511,6 +512,61 @@ input {
 
 .row-menu button.danger svg {
   color: var(--danger);
+}
+.row-menu button.warn { color: var(--warn); }
+.row-menu button.warn svg { color: var(--warn); }
+
+/* Popup Tạm hoãn */
+.hold-pop { width: 280px; gap: 12px; }
+.hold-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--warn);
+}
+.hold-head svg { width: 18px; height: 18px; }
+.hold-note {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  resize: none;
+  line-height: 1.5;
+}
+.hold-note:focus { border-color: var(--warn); }
+.hold-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.hold-actions .muted { color: var(--text-muted); padding: 6px 12px; border-radius: 8px; }
+.hold-actions .muted:hover { background: var(--hover); }
+.warn-btn { background: var(--warn) !important; color: #fff; }
+
+/* Lịch sử: đếm tạm hoãn + chấm than + lý do */
+.cal-count.hold { color: var(--warn); }
+.group-count.hold {
+  background: color-mix(in srgb, var(--warn) 18%, var(--bg));
+  color: var(--warn);
+}
+.hist-bang {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--warn);
+}
+.hist-bang svg { width: 20px; height: 20px; }
+.hist-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  word-break: break-word;
 }
 
 /* "+ thêm việc con" row */

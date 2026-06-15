@@ -145,10 +145,9 @@ function ReminderRow({ r, onRename, onOpen, onDelete }) {
   );
 }
 
-/* ================= Bảng chi tiết (Ngày / Giờ / Lặp lại / Ưu tiên) ================= */
+/* ================= Bảng chi tiết (Ngày / Lặp lại / Ưu tiên) ================= */
 function DetailSheet({ r, onPatch, onDelete, onClose }) {
   const hasDate = !!r.due_date;
-  const hasTime = !!r.due_time;
 
   const todayStr = () => {
     const d = new Date();
@@ -156,9 +155,7 @@ function DetailSheet({ r, onPatch, onDelete, onClose }) {
   };
 
   const toggleDate = (on) =>
-    onPatch(on ? { dueDate: r.due_date || todayStr() } : { dueDate: null, dueTime: null });
-  const toggleTime = (on) =>
-    onPatch(on ? { dueDate: r.due_date || todayStr(), dueTime: r.due_time || "09:00" } : { dueTime: null });
+    onPatch(on ? { dueDate: r.due_date || todayStr() } : { dueDate: null });
 
   return (
     <>
@@ -171,7 +168,7 @@ function DetailSheet({ r, onPatch, onDelete, onClose }) {
         </div>
 
         <div className="sheet-body">
-          <div className="sheet-group">Ngày & giờ</div>
+          <div className="sheet-group">Ngày</div>
 
           <div className="sheet-row">
             <span className="sheet-label">Ngày</span>
@@ -185,21 +182,6 @@ function DetailSheet({ r, onPatch, onDelete, onClose }) {
                 />
               )}
               <Switch on={hasDate} onChange={toggleDate} />
-            </div>
-          </div>
-
-          <div className="sheet-row">
-            <span className="sheet-label">Thời gian</span>
-            <div className="sheet-right">
-              {hasTime && (
-                <input
-                  type="time"
-                  className="sheet-input"
-                  value={r.due_time ?? ""}
-                  onChange={(e) => onPatch({ dueTime: e.target.value || null })}
-                />
-              )}
-              <Switch on={hasTime} onChange={toggleTime} />
             </div>
           </div>
 

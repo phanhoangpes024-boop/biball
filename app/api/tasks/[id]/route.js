@@ -15,6 +15,13 @@ export async function PATCH(req, { params }) {
     patch.completed = !!body.completed;
     // Ghi thời điểm tick xong để đưa vào Lịch sử làm việc (bỏ tick -> xoá mốc).
     patch.completed_at = body.completed ? new Date().toISOString() : null;
+    if (body.completed) { patch.on_hold = false; patch.held_at = null; } // xong thì bỏ trạng thái hoãn
+  }
+  // Tạm hoãn (kèm lý do) -> đưa vào Lịch sử; bỏ hoãn -> trả về Note.
+  if (body.hold !== undefined) {
+    patch.on_hold = !!body.hold;
+    patch.held_at = body.hold ? new Date().toISOString() : null;
+    patch.hold_note = body.hold ? (body.holdNote ?? "").trim() || null : null;
   }
   if (body.dueDate !== undefined) patch.due_date = body.dueDate;
   if (body.dueTime !== undefined) patch.due_time = body.dueTime;

@@ -26,6 +26,9 @@ create table if not exists tasks (
   parent_id     bigint  references tasks(id) on delete cascade,  -- null = việc cha
   completed     boolean not null default false,
   completed_at  timestamptz,                          -- thời điểm tick xong -> Lịch sử làm việc
+  on_hold       boolean not null default false,       -- tạm hoãn -> Lịch sử làm việc
+  hold_note     text,                                 -- lý do tạm hoãn
+  held_at       timestamptz,                          -- thời điểm tạm hoãn
   due_date      date,
   due_time      text,
   from_reminder boolean not null default false,       -- true = nhảy từ Lời nhắc qua
@@ -36,6 +39,10 @@ create table if not exists tasks (
 -- Nếu bảng tasks đã có từ trước thì bổ sung cột mới:
 alter table tasks add column if not exists from_reminder boolean not null default false;
 alter table tasks add column if not exists completed_at  timestamptz;
+-- Trạng thái "Tạm hoãn" (kèm lý do + thời điểm hoãn) -> đưa vào Lịch sử làm việc:
+alter table tasks add column if not exists on_hold   boolean not null default false;
+alter table tasks add column if not exists hold_note text;
+alter table tasks add column if not exists held_at   timestamptz;
 
 create index if not exists idx_tasks_parent on tasks(parent_id);
 create index if not exists idx_tasks_due    on tasks(due_date);

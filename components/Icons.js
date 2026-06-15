@@ -164,6 +164,12 @@ export const IconHistory = () => (
     <path d="M12 8v4l3 2" />
   </S>
 );
+export const IconBang = () => (
+  <S>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5v5M12 16h.01" />
+  </S>
+);
 export const IconHeart = () => (
   <S>
     <path d="M12 20.5s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5.5c-2.3 4.6-9.3 9-9.3 9z" />

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { api } from "@/lib/client";
 import { optimistic } from "@/lib/swr";
-import { IconCheck, IconTrash, IconChevron, IconX } from "@/components/Icons";
+import { IconCheck, IconTrash, IconChevron, IconX, IconBang } from "@/components/Icons";
 
 const KEY = "/api/tasks?view=history";
 const WD = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
@@ -29,21 +29,29 @@ export default function HistoryView() {
   const [cursor, setCursor] = useState(() => new Date());
   const [detailDay, setDetailDay] = useState(null); // ngày đang xem chi tiết
 
-  // Gom các đơn vị việc đã hoàn thành theo ngày (giờ máy = giờ VN của bạn).
+  // Gom các đơn vị việc (đã xong / tạm hoãn) theo ngày — giờ máy = giờ VN.
   const byDay = useMemo(() => {
     const m = new Map();
     for (const it of items ?? []) {
-      const k = keyOf(new Date(it.completed_at));
+      const k = keyOf(new Date(it.at));
       (m.get(k) ?? m.set(k, []).get(k)).push(it);
     }
     return m;
   }, [items]);
-  const countOf = (d) => byDay.get(keyOf(d))?.length ?? 0;
+  const countOf = (d) => {
+    const arr = byDay.get(keyOf(d)) ?? [];
+    return { done: arr.filter((x) => x.type === "done").length, hold: arr.filter((x) => x.type === "hold").length };
+  };
 
-  const uncheck = (t) =>
+  const uncheck = (t) => // việc đã xong -> bỏ tick, về Note
     optimistic(mutate, KEY,
       (prev = []) => prev.filter((x) => x.id !== t.id),
       () => api(`/api/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ completed: false }) }),
+      () => gmutate("/api/tasks?view=today"));
+  const unhold = (t) => // việc tạm hoãn -> bỏ hoãn, về Note
+    optimistic(mutate, KEY,
+      (prev = []) => prev.filter((x) => x.id !== t.id),
+      () => api(`/api/tasks/${t.id}`, { method: "PATCH", body: JSON.stringify({ hold: false }) }),
       () => gmutate("/api/tasks?view=today"));
   const remove = (t) =>
     optimistic(mutate, KEY,
@@ -99,6 +107,7 @@ export default function HistoryView() {
               date={detailDay}
               items={byDay.get(keyOf(detailDay)) ?? []}
               onUncheck={uncheck}
+              onUnhold={unhold}
               onRemove={remove}
               onClose={() => setDetailDay(null)}
             />
@@ -133,7 +142,7 @@ function Grid({ mode, cursor, today, countOf, onOpen }) {
       <div className="cal-grid">
         {cells.map((d) => {
           const inMonth = mode === "week" || d.getMonth() === cursor.getMonth();
-          const n = countOf(d);
+          const { done, hold } = countOf(d);
           return (
             <button
               key={keyOf(d)}
@@ -141,8 +150,11 @@ function Grid({ mode, cursor, today, countOf, onOpen }) {
               onClick={() => onOpen(d)}
             >
               <span className="cal-day">{d.getDate()}</span>
-              {n > 0 && (
-                <span className="cal-count"><IconCheck />{n}<span className="cal-cw">&nbsp;công việc</span></span>
+              {done > 0 && (
+                <span className="cal-count"><IconCheck />{done}<span className="cal-cw">&nbsp;công việc</span></span>
+              )}
+              {hold > 0 && (
+                <span className="cal-count hold"><IconBang />{hold}<span className="cal-cw">&nbsp;tạm hoãn</span></span>
               )}
             </button>
           );
@@ -152,10 +164,10 @@ function Grid({ mode, cursor, today, countOf, onOpen }) {
   );
 }
 
-/* ===== Chi tiết 1 ngày (nhóm việc mẹ + việc con) ===== */
-function DayDetail({ date, items, onUncheck, onRemove, onClose }) {
+/* ===== Chi tiết 1 ngày (nhóm việc mẹ + việc con; gồm cả việc tạm hoãn) ===== */
+function DayDetail({ date, items, onUncheck, onUnhold, onRemove, onClose }) {
   const blocks = useMemo(() => {
-    const sorted = [...items].sort((a, b) => (a.completed_at > b.completed_at ? 1 : -1));
+    const sorted = [...items].sort((a, b) => (a.at > b.at ? 1 : -1));
     const groups = new Map(); // parent_id -> {title, items}
     const out = [];
     for (const it of sorted) {
@@ -170,26 +182,31 @@ function DayDetail({ date, items, onUncheck, onRemove, onClose }) {
     return out;
   }, [items]);
 
+  const doneN = items.filter((x) => x.type === "done").length;
+  const holdN = items.filter((x) => x.type === "hold").length;
   const heading = date.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  const rowProps = { onUncheck, onUnhold, onRemove };
 
   return (
     <section className="group cal-detail">
       <h2 className="group-h">
-        {heading} <span className="group-count">{items.length}</span>
+        {heading}
+        {doneN > 0 && <span className="group-count">{doneN} xong</span>}
+        {holdN > 0 && <span className="group-count hold">{holdN} tạm hoãn</span>}
         <button className="cal-detail-x" onClick={onClose} aria-label="Đóng"><IconX /></button>
       </h2>
       {items.length === 0 ? (
-        <div className="empty">Ngày này chưa hoàn thành việc nào.</div>
+        <div className="empty">Ngày này chưa có việc nào.</div>
       ) : (
         <div className="card">
           {blocks.map((b, i) =>
             b.standalone ? (
-              <HistRow key={b.item.id} it={b.item} onUncheck={onUncheck} onRemove={onRemove} />
+              <HistRow key={b.item.id} it={b.item} {...rowProps} />
             ) : (
               <div key={`g${i}`} className="hist-parent">
                 <div className="hist-parent-title">{b.group.parentTitle || "(việc mẹ)"}</div>
                 {b.group.items.map((it) => (
-                  <HistRow key={it.id} it={it} sub onUncheck={onUncheck} onRemove={onRemove} />
+                  <HistRow key={it.id} it={it} sub {...rowProps} />
                 ))}
               </div>
             )
@@ -200,15 +217,23 @@ function DayDetail({ date, items, onUncheck, onRemove, onClose }) {
   );
 }
 
-function HistRow({ it, sub, onUncheck, onRemove }) {
+function HistRow({ it, sub, onUncheck, onUnhold, onRemove }) {
+  const hold = it.type === "hold";
   return (
     <div className={`task-row ${sub ? "sub" : ""}`}>
-      <button className="check checked" title="Bỏ hoàn thành (đưa về Note)" onClick={() => onUncheck(it)}>
-        <IconCheck />
-      </button>
+      {hold ? (
+        <button className="hist-bang" title="Bỏ hoãn (đưa về Note)" onClick={() => onUnhold(it)}>
+          <IconBang />
+        </button>
+      ) : (
+        <button className="check checked" title="Bỏ hoàn thành (đưa về Note)" onClick={() => onUncheck(it)}>
+          <IconCheck />
+        </button>
+      )}
       <div className="hist-main">
         <div className="hist-title">{it.title}</div>
-        <div className="hist-time">Lúc {fmtTime(it.completed_at)}</div>
+        {hold && it.note && <div className="hist-note">“{it.note}”</div>}
+        <div className="hist-time">{hold ? "Tạm hoãn lúc " : "Lúc "}{fmtTime(it.at)}</div>
       </div>
       <div className="row-actions" style={{ opacity: 1 }}>
         <button title="Xóa" onClick={() => onRemove(it)}><IconTrash /></button>
